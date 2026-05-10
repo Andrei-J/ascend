@@ -1,0 +1,1 @@
+Ascend is an open-source workout tracker designed to help users monitor their fitness progress, manage workout routines, and stay consistent with their training goals. It allows users to create customizable workout templates, log exercises, track performance over time, and organize their fitness journey in a simple and efficient way.
