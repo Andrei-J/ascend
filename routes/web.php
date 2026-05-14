@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\WorkoutController;
+use App\Http\Controllers\ExercisesController;
 
 Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
@@ -14,6 +15,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/Workout', [WorkoutController::class, 'index'])->name('workout');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/Exercises', [ExercisesController::class, 'index'])->name('exercises');
 });
 
 require __DIR__.'/settings.php';

@@ -50,6 +50,12 @@ const mainNavItems: NavItem[] = [
         title: 'Workout',
         href: '/Workout',
         icon: Dumbbell,
+    },
+
+    {
+        title: 'Exercises',
+        href: '/Exercises',
+        icon: Folder,
     }
 ];
 
