@@ -7,6 +7,6 @@ use Spatie\Permission\Traits\HasRoles;
 
 class Roles extends Model
 {
-    use HasRoles;
+
     
 }
