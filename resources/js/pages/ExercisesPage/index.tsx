@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Search, Plus, Dumbbell, Activity, Clock, X } from 'lucide-react';
+import { Search, Plus, Dumbbell, Activity, Clock, X, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 
@@ -13,8 +13,26 @@ interface ExerciseType {
     category: string;
     muscleGroup: string;
     equipment: string;
-    description: string;
+    difficulty: string;
+    instructions: string;
     lastPerformed: string | null;
+}
+
+function getDifficultyColor(difficulty: string) {
+    const diff = (difficulty || '').toLowerCase();
+    
+    if (diff === 'beginner' || diff === 'easy') {
+        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+    }
+    if (diff === 'intermediate' || diff === 'medium') {
+        return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
+    }
+    if (diff === 'advanced' || diff === 'hard' || diff === 'monster') {
+        return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300';
+    }
+    
+    // Default fallback if no match
+    return 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300';
 }
 
 export default function Exercise({
@@ -24,28 +42,58 @@ export default function Exercise({
 }) {
     // 1. Modal visibility state
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
 
     // 2. Inertia form helper to manage data, submission, and errors
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post,put, processing, errors, reset, clearErrors } = useForm({
         name: '',
         category: 'Strength',
         muscleGroup: '',
         equipment: '',
-        description: '',
+        difficulty: '',
+        instructions: '',
     });
 
-    // 3. Handle the form submission
+    // Handle opening modal for CREATE
+    const handleCreate = () => {
+        setEditingId(null);
+        reset();
+        clearErrors();
+        setIsModalOpen(true);
+    };
+
+    // Handle opening modal for EDIT
+    const handleEdit = (exercise: ExerciseType) => {
+        setEditingId(exercise.id);
+        setData({
+            name: exercise.name,
+            category: exercise.category,
+            muscleGroup: exercise.muscleGroup,
+            equipment: exercise.equipment,
+            difficulty: exercise.difficulty,
+            instructions: exercise.instructions,
+        });
+        clearErrors();
+        setIsModalOpen(true);
+    };
+
+    
+
+    // 3. Handle the form submission (Handles both Create and Update)
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // This will send a POST request to your Laravel route
-        post('/exercises/create', {
-            onSuccess: () => {
-                // If successful, close the modal and clear the form inputs
-                setIsModalOpen(false);
-                reset();
-            },
-        });
+        const onSuccess = () => {
+            setIsModalOpen(false);
+            reset();
+        };
+
+        if (editingId) {
+            // Changed from `/Exercises/${editingId}`
+            put(`/Exercises/update/${editingId}`, { onSuccess }); 
+        } else {
+            post('/Exercises/create', { onSuccess });
+        }
     };
 
     return (
@@ -149,22 +197,41 @@ export default function Exercise({
                                 )}
                             </div>
 
+                            {/* Difficulty */}
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                    Difficulty
+                                </label>
+                                <Input
+                                    value={data.difficulty}
+                                    onChange={(e) =>
+                                        setData('difficulty', e.target.value)
+                                    }
+                                    placeholder="e.g. Beginner, intermidiate & Monster"
+                                />
+                                {errors.difficulty && (
+                                    <span className="mt-1 text-xs text-red-500">
+                                        {errors.difficulty}
+                                    </span>
+                                )}
+                            </div>
+
                             {/* Description */}
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                    Description
+                                    instructions
                                 </label>
                                 <textarea
-                                    value={data.description}
+                                    value={data.instructions}
                                     onChange={(e) =>
-                                        setData('description', e.target.value)
+                                        setData('instructions', e.target.value)
                                     }
                                     placeholder="Describe the movement..."
                                     className="flex min-h-[80px] w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm placeholder:text-neutral-500 focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-950 dark:placeholder:text-neutral-400 dark:focus-visible:ring-neutral-300"
                                 />
-                                {errors.description && (
+                                {errors.instructions && (
                                     <span className="mt-1 text-xs text-red-500">
-                                        {errors.description}
+                                        {errors.instructions}
                                     </span>
                                 )}
                             </div>
@@ -211,7 +278,7 @@ export default function Exercise({
                     </div>
 
                     <Button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={handleCreate}
                         className="w-full bg-neutral-900 font-medium text-neutral-50 shadow-sm transition-colors hover:bg-neutral-800 sm:w-auto dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
                     >
                         <Plus className="mr-2 h-4 w-4" />
@@ -235,62 +302,147 @@ export default function Exercise({
                 ) : (
                     /* Populated Grid UI */
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                        {exercises.map((exercise) => (
-                            <Card
-                                key={exercise.id}
-                                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-neutral-200/80 bg-white/50 p-5 transition-all duration-300 hover:border-neutral-300 hover:bg-white hover:shadow-md dark:border-neutral-800/60 dark:bg-neutral-900/30 dark:hover:border-neutral-700 dark:hover:bg-neutral-900"
-                            >
-                                <div>
-                                    <div className="mb-3 flex items-start justify-between">
-                                        <div className="rounded-xl bg-neutral-100 p-2 text-neutral-700 transition-transform duration-300 group-hover:scale-110 dark:bg-neutral-800 dark:text-neutral-300">
-                                            <Dumbbell className="h-4.5 w-4.5" />
+                        {exercises.map((exercise) => {
+                            const cc = getCategoryColor(exercise.category);
+                            return (
+                                <Card
+                                    key={exercise.id}
+                                    className="group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200/80 bg-white p-0 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl dark:border-neutral-800/60 dark:bg-neutral-900"
+                                >
+                                    {/* Coloured accent bar */}
+                                    <div className={`h-1 w-full ${cc.bar}`} />
+
+                                    {/* Main body */}
+                                    <div className="flex flex-1 flex-col gap-4 p-5">
+
+
+                                        {/* Icon + category badge row */}
+                                        <div className="flex items-center justify-between">
+                                            <div
+                                                className={`flex items-center justify-center rounded-xl p-2.5 ${cc.icon}`}
+                                            >
+                                                <Dumbbell className="h-4 w-4" />
+                                            </div>
+                                            <span
+                                                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase ${cc.badge}`}
+                                            >
+                                                {exercise.category || '—'}
+                                            </span>
+
+                                            <button
+                                                onClick={() => handleEdit(exercise)}
+                                                className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-50"
+                                                title="Edit Exercise"
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </button>
+                                        </div>
+
+                                        {/* Name & Difficulty Row */}
+                                        <div>
+                                            <div className="flex items-start justify-between gap-3">
+                                                <h3 className="line-clamp-1 text-base font-bold text-neutral-900 dark:text-neutral-50">
+                                                    {exercise.name}
+                                                </h3> 
+
+                                                {/* Styled Difficulty Badge */}
+                                                <span
+                                                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${getDifficultyColor(exercise.difficulty)}`}
+                                                >
+                                                    {exercise.difficulty}
+                                                </span>
+                                            </div>
+
+                                            {exercise.instructions ? (
+                                                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+                                                    {exercise.instructions}
+                                                </p>
+                                            ) : (
+                                                <p className="mt-1 text-xs text-neutral-400 italic dark:text-neutral-600">
+                                                    No description provided.
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Muscle group + equipment chips */}
+                                        <div className="flex flex-wrap gap-2">
+                                            {exercise.muscleGroup && (
+                                                <div className="flex items-center gap-1.5 rounded-lg bg-neutral-100 px-2.5 py-1 dark:bg-neutral-800">
+                                                    <Activity className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                                                    <span className="text-[11px] font-medium text-neutral-700 dark:text-neutral-300">
+                                                        {exercise.muscleGroup}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {exercise.equipment && (
+                                                <div className="flex items-center gap-1.5 rounded-lg border border-neutral-200 px-2.5 py-1 dark:border-neutral-700">
+                                                    <Dumbbell className="h-3 w-3 text-neutral-400 dark:text-neutral-500" />
+                                                    <span className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
+                                                        {exercise.equipment}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
-                                    <h3 className="mb-1.5 line-clamp-1 text-base font-semibold text-neutral-900 transition-colors duration-200 group-hover:text-neutral-950 dark:text-neutral-50 dark:group-hover:text-white">
-                                        {exercise.name}
-                                    </h3>
-
-                                    <p className="mb-4 line-clamp-2 min-h-[2.5rem] text-xs text-neutral-500 dark:text-neutral-400">
-                                        {exercise.description}
-                                    </p>
-                                </div>
-
-                                <div className="space-y-3 border-t border-neutral-100 pt-3 dark:border-neutral-800/60">
-                                    <div className="flex flex-wrap gap-1.5">
-                                        <Badge
-                                            variant="secondary"
-                                            className="rounded-full border-none bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
-                                        >
-                                            {exercise.muscleGroup}
-                                        </Badge>
-                                        <Badge
-                                            variant="outline"
-                                            className="rounded-full border-neutral-200 px-2 py-0.5 text-[10px] font-semibold text-neutral-600 dark:border-neutral-800 dark:text-neutral-400"
-                                        >
-                                            {exercise.equipment}
-                                        </Badge>
-                                    </div>
-
-                                    <div className="text-neutral-450 flex items-center justify-between text-[10px] font-medium dark:text-neutral-500">
-                                        <span className="flex items-center gap-1">
-                                            <Activity className="h-3 w-3" />
-                                            {exercise.category}
+                                    {/* Footer: last performed */}
+                                    <div className="flex items-center justify-between border-t border-neutral-100 px-5 py-3 dark:border-neutral-800/60">
+                                        <span className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-400 dark:text-neutral-500">
+                                            <Clock className="h-3.5 w-3.5" />
+                                            Last performed
                                         </span>
-                                        <span className="flex items-center gap-1">
-                                            <Clock className="h-3 w-3" />
-                                            Last:{' '}
+                                        <span
+                                            className={`text-[11px] font-semibold ${
+                                                exercise.lastPerformed
+                                                    ? 'text-neutral-700 dark:text-neutral-300'
+                                                    : 'text-neutral-400 dark:text-neutral-600'
+                                            }`}
+                                        >
                                             {exercise.lastPerformed || 'Never'}
                                         </span>
                                     </div>
-                                </div>
-                            </Card>
-                        ))}
+                                </Card>
+                            );
+                        })}
                     </div>
                 )}
             </div>
         </>
     );
+}
+
+/** Returns Tailwind colour classes keyed by exercise category. */
+function getCategoryColor(category: string) {
+    const cat = (category || '').toLowerCase();
+    if (cat === 'strength')
+        return {
+            bar: 'bg-gradient-to-r from-violet-500 to-indigo-500',
+            icon: 'bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-400',
+            badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+        };
+    if (cat === 'cardio')
+        return {
+            bar: 'bg-gradient-to-r from-orange-400 to-rose-500',
+            icon: 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400',
+            badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+        };
+    if (cat === 'flexibility' || cat === 'mobility')
+        return {
+            bar: 'bg-gradient-to-r from-teal-400 to-cyan-500',
+            icon: 'bg-teal-100 text-teal-600 dark:bg-teal-900/40 dark:text-teal-400',
+            badge: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
+        };
+    if (cat === 'balance' || cat === 'core')
+        return {
+            bar: 'bg-gradient-to-r from-amber-400 to-yellow-400',
+            icon: 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400',
+            badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+        };
+    return {
+        bar: 'bg-gradient-to-r from-neutral-400 to-neutral-500',
+        icon: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400',
+        badge: 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300',
+    };
 }
 
 Exercise.layout = {

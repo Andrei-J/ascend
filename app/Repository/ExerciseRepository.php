@@ -11,6 +11,24 @@ class ExerciseRepository
     public function getAllExercises()
     {
         // This queries your 'exercises' table using Eloquent
-        return Exercise::all();
+        return Exercise::latest()->get();
+    }
+
+    //for creating exercises
+    public function create(array $data)
+    {
+        return Exercise::create($data);
+    }
+
+
+        //for creating exercises
+    public function update($id, array $data)
+    {
+        $exercise = Exercise::findOrFail($id);
+
+        $exercise->update($data);
+
+        return $exercise;
+       
     }
 }
