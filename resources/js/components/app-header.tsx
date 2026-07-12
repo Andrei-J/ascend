@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Dumbbell, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
+import { BookOpen, Dumbbell, Folder, History, LayoutGrid, Menu, Search } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
@@ -50,6 +50,12 @@ const mainNavItems: NavItem[] = [
         title: 'Workout',
         href: '/Workout',
         icon: Dumbbell,
+    },
+
+    {
+        title: 'History',
+        href: '/History',
+        icon: History,
     },
 
     {

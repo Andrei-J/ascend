@@ -1,14 +1,6 @@
-import { Link, usePage } from '@inertiajs/react';
-import { Dumbbell, Folder, LayoutGrid } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { UserMenuContent } from '@/components/user-menu-content';
+import { Link } from '@inertiajs/react';
+import { Dumbbell, Folder, History, LayoutGrid } from 'lucide-react';
 import { useCurrentUrl } from '@/hooks/use-current-url';
-import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
@@ -25,20 +17,25 @@ const mainNavItems: NavItem[] = [
         icon: Dumbbell,
     },
     {
+        title: 'History',
+        href: '/History',
+        icon: History,
+    },
+    {
         title: 'Exercises',
         href: '/Exercises',
         icon: Folder,
     },
 ];
 
+
 type Props = {
     variant?: 'sidebar' | 'header';
 };
 
 export function AppMobileFooter({ variant = 'sidebar' }: Props) {
-    const { auth } = usePage().props;
-    const getInitials = useInitials();
     const { isCurrentUrl } = useCurrentUrl();
+
 
     return (
         <div
@@ -51,6 +48,7 @@ export function AppMobileFooter({ variant = 'sidebar' }: Props) {
                 {mainNavItems.map((item) => {
                     const Icon = item.icon;
                     const active = isCurrentUrl(item.href);
+
                     return (
                         <Link
                             key={item.title}
@@ -76,24 +74,6 @@ export function AppMobileFooter({ variant = 'sidebar' }: Props) {
                     );
                 })}
 
-                {auth.user && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <button className="flex h-full w-16 flex-col items-center justify-center gap-1 text-sidebar-foreground/60 transition-colors duration-200 hover:text-sidebar-foreground focus:outline-hidden">
-                                <Avatar className="size-6 overflow-hidden rounded-full border border-sidebar-border shadow-xs">
-                                    <AvatarImage src={auth.user.avatar} alt={auth.user.name} />
-                                    <AvatarFallback className="bg-neutral-200 text-[10px] font-bold text-black dark:bg-neutral-700 dark:text-white">
-                                        {getInitials(auth.user.name)}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <span className="text-[10px] tracking-wide">Account</span>
-                            </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56" align="end" side="top" sideOffset={8}>
-                            <UserMenuContent user={auth.user} />
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
             </nav>
         </div>
     );

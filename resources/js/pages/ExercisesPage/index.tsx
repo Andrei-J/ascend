@@ -1,11 +1,11 @@
 import { Head } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
+import { useForm } from '@inertiajs/react';
 import { Search, Plus, Dumbbell, Activity, Clock, X, Pencil } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from '@inertiajs/react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 interface ExerciseType {
     id: number;
@@ -24,9 +24,11 @@ function getDifficultyColor(difficulty: string) {
     if (diff === 'beginner' || diff === 'easy') {
         return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
     }
+
     if (diff === 'intermediate' || diff === 'medium') {
         return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
     }
+
     if (diff === 'advanced' || diff === 'hard' || diff === 'monster') {
         return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300';
     }
@@ -102,9 +104,9 @@ export default function Exercise({
 
             {/* 4. The Modal Overlay & Form */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-                    <div className="w-full max-w-md overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-xl dark:border-neutral-800 dark:bg-neutral-900">
-                        <div className="flex items-center justify-between border-b border-neutral-100 p-5 dark:border-neutral-800">
+                <div className="fixed inset-0 z-50 flex flex-col bg-black/50 backdrop-blur-sm sm:items-center sm:justify-center sm:p-4">
+                    <div className="flex flex-col w-full h-full sm:h-auto sm:max-w-md overflow-hidden sm:rounded-2xl border border-neutral-200 bg-white shadow-xl dark:border-neutral-800 dark:bg-neutral-900">
+                        <div className="flex shrink-0 items-center justify-between border-b border-neutral-100 p-5 dark:border-neutral-800">
                             <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
                                 Create New Exercise
                             </h2>
@@ -118,7 +120,7 @@ export default function Exercise({
 
                         <form
                             onSubmit={submit}
-                            className="flex flex-col gap-4 p-5"
+                            className="flex-1 overflow-y-auto flex flex-col gap-4 p-5"
                         >
                             {/* Name */}
                             <div>
@@ -304,6 +306,7 @@ export default function Exercise({
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                         {exercises.map((exercise) => {
                             const cc = getCategoryColor(exercise.category);
+
                             return (
                                 <Card
                                     key={exercise.id}
@@ -414,30 +417,39 @@ export default function Exercise({
 /** Returns Tailwind colour classes keyed by exercise category. */
 function getCategoryColor(category: string) {
     const cat = (category || '').toLowerCase();
-    if (cat === 'strength')
-        return {
+
+    if (cat === 'strength') {
+return {
             bar: 'bg-gradient-to-r from-violet-500 to-indigo-500',
             icon: 'bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-400',
             badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
         };
-    if (cat === 'cardio')
-        return {
+}
+
+    if (cat === 'cardio') {
+return {
             bar: 'bg-gradient-to-r from-orange-400 to-rose-500',
             icon: 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400',
             badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
         };
-    if (cat === 'flexibility' || cat === 'mobility')
-        return {
+}
+
+    if (cat === 'flexibility' || cat === 'mobility') {
+return {
             bar: 'bg-gradient-to-r from-teal-400 to-cyan-500',
             icon: 'bg-teal-100 text-teal-600 dark:bg-teal-900/40 dark:text-teal-400',
             badge: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
         };
-    if (cat === 'balance' || cat === 'core')
-        return {
+}
+
+    if (cat === 'balance' || cat === 'core') {
+return {
             bar: 'bg-gradient-to-r from-amber-400 to-yellow-400',
             icon: 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400',
             badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
         };
+}
+
     return {
         bar: 'bg-gradient-to-r from-neutral-400 to-neutral-500',
         icon: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400',

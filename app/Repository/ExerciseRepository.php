@@ -31,4 +31,11 @@ class ExerciseRepository
         return $exercise;
        
     }
+
+    public function delete($id)
+    {
+        $exercise = Exercise::findOrFail($id);
+
+        $exercise->delete();
+    }
 }
