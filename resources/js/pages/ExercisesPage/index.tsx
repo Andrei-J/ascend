@@ -1,8 +1,6 @@
-import { Head } from '@inertiajs/react';
-import { useForm } from '@inertiajs/react';
-import { Search, Plus, Dumbbell, Activity, Clock, X, Pencil } from 'lucide-react';
+import { Head, useForm, router } from '@inertiajs/react';
+import { Search, Plus, Dumbbell, Activity, Clock, X, Pencil, Trash2, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -45,6 +43,10 @@ export default function Exercise({
     // 1. Modal visibility state
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
+
+    // Delete confirmation state
+    const [deleteTarget, setDeleteTarget] = useState<ExerciseType | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // 2. Inertia form helper to manage data, submission, and errors
     const { data, setData, post,put, processing, errors, reset, clearErrors } = useForm({
@@ -98,9 +100,77 @@ export default function Exercise({
         }
     };
 
+    const handleDelete = (exercise: ExerciseType) => {
+        setDeleteTarget(exercise);
+    };
+
+    const confirmDelete = () => {
+        if (!deleteTarget) {
+            return;
+        }
+
+        setIsDeleting(true);
+        router.delete(`/Exercises/delete/${deleteTarget.id}`, {
+            onFinish: () => {
+                setIsDeleting(false);
+                setDeleteTarget(null);
+            },
+        });
+    };
+
     return (
         <>
             <Head title="Exercises" />
+
+            {/* ── Delete Confirmation Modal ── */}
+            {deleteTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={() => !isDeleting && setDeleteTarget(null)}
+                    />
+                    <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-neutral-700 bg-neutral-900 shadow-2xl">
+                        <div className="h-1 w-full bg-gradient-to-r from-rose-500 to-red-500" />
+                        <div className="p-6">
+                            <div className="mb-4 flex items-start gap-4">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-950/40">
+                                    <AlertTriangle className="h-5 w-5 text-rose-450" />
+                                </div>
+                                <div className="text-left">
+                                    <h2 className="text-base font-semibold text-neutral-50">
+                                        Delete exercise?
+                                    </h2>
+                                    <p className="mt-1 text-sm text-neutral-400 leading-relaxed">
+                                        You're about to permanently delete{' '}
+                                        <span className="font-semibold text-neutral-200">
+                                            {deleteTarget.name}
+                                        </span>
+                                        . This action cannot be undone.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    disabled={isDeleting}
+                                    onClick={() => setDeleteTarget(null)}
+                                    className="rounded-xl border border-neutral-700 px-4 py-2 text-sm font-semibold text-neutral-350 hover:bg-neutral-800 hover:text-white transition-colors disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={isDeleting}
+                                    onClick={confirmDelete}
+                                    className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-500 transition-colors disabled:opacity-50"
+                                >
+                                    {isDeleting ? 'Deleting…' : 'Yes, delete'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* 4. The Modal Overlay & Form */}
             {isModalOpen && (
@@ -332,13 +402,22 @@ export default function Exercise({
                                                 {exercise.category || '—'}
                                             </span>
 
-                                            <button
-                                                onClick={() => handleEdit(exercise)}
-                                                className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-50"
-                                                title="Edit Exercise"
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </button>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    onClick={() => handleEdit(exercise)}
+                                                    className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-50"
+                                                    title="Edit Exercise"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(exercise)}
+                                                    className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-rose-500 dark:hover:bg-neutral-800 dark:hover:text-rose-450"
+                                                    title="Delete Exercise"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {/* Name & Difficulty Row */}

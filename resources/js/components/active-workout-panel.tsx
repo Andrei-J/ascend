@@ -368,22 +368,74 @@ return null;
                                                 </button>
                                             </div>
 
-                                            {/* Rest timer spacer as requested by screenshot */}
-                                            {setIndex < ex.sets.length - 1 && (
-                                                <div className="flex items-center gap-2 px-1 py-0.5">
-                                                    <div className="h-[1px] flex-1 bg-sky-950/30" />
-                                                    {activeRest && activeRest.exerciseIndex === exIndex ? (
-                                                        <div className="flex items-center gap-1.5 rounded-full bg-sky-950/60 border border-sky-900/50 px-2 py-0.5 text-[9px] font-black tracking-widest text-sky-400 animate-pulse">
-                                                            RESTING: {formatRestTime(activeRest.remaining)}
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-[10px] font-black tracking-widest text-sky-400/80">
-                                                            {formatRestTime(ex.restSeconds !== undefined ? ex.restSeconds : 120)}
-                                                        </span>
-                                                    )}
-                                                    <div className="h-[1px] flex-1 bg-sky-950/30" />
-                                                </div>
-                                            )}
+                                             {/* Rest timer spacer */}
+                                             <div className="flex flex-col gap-2 py-1 px-1">
+                                                 {activeRest && activeRest.exerciseIndex === exIndex && activeRest.setIndex === setIndex ? (
+                                                     <div className="space-y-2 w-full animate-in fade-in slide-in-from-top duration-300">
+                                                         {/* Timer Info and Adjust Buttons */}
+                                                         <div className="flex items-center justify-between">
+                                                             <div className="flex items-center gap-1.5 font-black text-sky-400 text-[10px] tracking-widest uppercase animate-pulse">
+                                                                 <Timer className="h-3.5 w-3.5" />
+                                                                 <span>Resting: {formatRestTime(activeRest.remaining)}</span>
+                                                             </div>
+                                                             <div className="flex items-center gap-1">
+                                                                 <button
+                                                                     type="button"
+                                                                     onClick={() => adjustActiveRest(15)}
+                                                                     className="rounded-lg bg-sky-500/10 hover:bg-sky-500/20 px-2 py-0.5 text-[9px] font-black text-sky-400 border border-sky-500/20 transition-all hover:scale-105 active:scale-95"
+                                                                     title="Add 15s to rest and update exercise default"
+                                                                 >
+                                                                     +15s
+                                                                 </button>
+                                                                 <button
+                                                                     type="button"
+                                                                     onClick={() => adjustActiveRest(-15)}
+                                                                     className="rounded-lg bg-sky-500/10 hover:bg-sky-500/20 px-2 py-0.5 text-[9px] font-black text-sky-400 border border-sky-500/20 transition-all hover:scale-105 active:scale-95"
+                                                                     title="Remove 15s from rest and update exercise default"
+                                                                 >
+                                                                     -15s
+                                                                 </button>
+                                                             </div>
+                                                         </div>
+
+                                                         {/* Glowing Animated Progress Bar */}
+                                                         <div className="relative w-full h-1.5 bg-neutral-900 rounded-full overflow-hidden border border-neutral-800/60 shadow-[inset_0_1px_2px_rgba(0,0,0,0.4)]">
+                                                             <div 
+                                                                 className="absolute top-0 left-0 h-full bg-gradient-to-r from-sky-400 via-sky-500 to-indigo-500 rounded-full transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(56,189,248,0.4)]"
+                                                                 style={{ width: `${Math.min(100, Math.max(0, (activeRest.remaining / activeRest.total) * 100))}%` }}
+                                                             />
+                                                         </div>
+                                                     </div>
+                                                 ) : (
+                                                     <div className="flex items-center gap-2">
+                                                         <div className="h-[1px] flex-1 bg-sky-950/20" />
+                                                         <div className="flex items-center gap-2 z-10">
+                                                             <span className="text-[10px] font-black tracking-widest text-sky-400/60">
+                                                                 REST: {formatRestTime(ex.restSeconds !== undefined ? ex.restSeconds : 120)}
+                                                             </span>
+                                                             <div className="flex items-center gap-1 bg-neutral-900/40 rounded-lg p-0.5 border border-neutral-800/40">
+                                                                 <button
+                                                                     type="button"
+                                                                     onClick={() => updateExerciseRest(exIndex, Math.max(15, (ex.restSeconds !== undefined ? ex.restSeconds : 120) + 15))}
+                                                                     className="rounded bg-neutral-800/60 hover:bg-neutral-750 px-1.5 py-0.2 text-[8px] font-extrabold text-neutral-400 hover:text-sky-400 transition-colors"
+                                                                     title="Increase exercise rest duration (+15s)"
+                                                                 >
+                                                                     +15s
+                                                                 </button>
+                                                                 <button
+                                                                     type="button"
+                                                                     onClick={() => updateExerciseRest(exIndex, Math.max(15, (ex.restSeconds !== undefined ? ex.restSeconds : 120) - 15))}
+                                                                     className="rounded bg-neutral-800/60 hover:bg-neutral-750 px-1.5 py-0.2 text-[8px] font-extrabold text-neutral-400 hover:text-sky-400 transition-colors"
+                                                                     title="Decrease exercise rest duration (-15s)"
+                                                                 >
+                                                                     -15s
+                                                                 </button>
+                                                             </div>
+                                                         </div>
+                                                         <div className="h-[1px] flex-1 bg-sky-950/20" />
+                                                     </div>
+                                                 )}
+                                             </div>
                                         </div>
                                     ))}
                                 </div>

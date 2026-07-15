@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { AlertTriangle } from 'lucide-react';
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 
@@ -21,7 +22,7 @@ export interface WorkoutSession {
     templateId: number | null;
     startTime: string; // ISO String
     exercises: ActiveExercise[];
-    activeRest?: { exerciseIndex: number; remaining: number; total: number; timestamp: number } | null;
+    activeRest?: { exerciseIndex: number; setIndex: number; remaining: number; total: number; timestamp: number } | null;
 }
 
 interface WorkoutContextType {
@@ -32,7 +33,7 @@ interface WorkoutContextType {
     startTime: string | null;
     exercises: ActiveExercise[];
     elapsedSeconds: number;
-    activeRest: { exerciseIndex: number; remaining: number; total: number } | null;
+    activeRest: { exerciseIndex: number; setIndex: number; remaining: number; total: number } | null;
     startWorkout: (initialData?: {
         name: string;
         templateId: number | null;
@@ -106,6 +107,19 @@ function getInitialWorkout(): WorkoutSession | null {
 export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     const [initialWorkout] = useState<WorkoutSession | null>(() => getInitialWorkout());
 
+    const [pendingWorkout, setPendingWorkout] = useState<{
+        initialData: {
+            name: string;
+            templateId: number | null;
+            exercises: {
+                exercise_id: number | null;
+                name: string;
+                sets: { weight: number | string; reps: number | string; unit?: string }[];
+                restSeconds?: number;
+            }[];
+        } | null;
+    } | null>(null);
+
     const [isActive, setIsActive] = useState(!!initialWorkout);
     const [isExpanded, setIsExpanded] = useState(false);
     const [name, setName] = useState(initialWorkout?.name || '');
@@ -123,7 +137,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Active rest countdown state
-    const [activeRest, setActiveRest] = useState<{ exerciseIndex: number; remaining: number; total: number } | null>(() => {
+    const [activeRest, setActiveRest] = useState<{ exerciseIndex: number; setIndex: number; remaining: number; total: number } | null>(() => {
         if (initialWorkout?.activeRest) {
             const savedRest = initialWorkout.activeRest;
             const elapsed = Math.floor((Date.now() - savedRest.timestamp) / 1000);
@@ -132,6 +146,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
             if (remaining > 0) {
                 return {
                     exerciseIndex: savedRest.exerciseIndex,
+                    setIndex: savedRest.setIndex !== undefined ? savedRest.setIndex : 0,
                     remaining,
                     total: savedRest.total,
                 };
@@ -157,6 +172,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
                 exercises,
                 activeRest: activeRest ? {
                     exerciseIndex: activeRest.exerciseIndex,
+                    setIndex: activeRest.setIndex,
                     remaining: activeRest.remaining,
                     total: activeRest.total,
                     timestamp: Date.now(),
@@ -209,7 +225,7 @@ return null;
         };
     }, [isActive, startTime, hasActiveRest]);
 
-    const startWorkout = (initialData?: {
+    const executeStartWorkout = (initialData?: {
         name: string;
         templateId: number | null;
         exercises: {
@@ -245,6 +261,25 @@ return null;
         setActiveRest(null);
 
         toast.success(`Started "${workoutName}"!`);
+    };
+
+    const startWorkout = (initialData?: {
+        name: string;
+        templateId: number | null;
+        exercises: {
+            exercise_id: number | null;
+            name: string;
+            sets: { weight: number | string; reps: number | string; unit?: string }[];
+            restSeconds?: number;
+        }[];
+    } | null) => {
+        if (isActive) {
+            setPendingWorkout({ initialData: initialData !== undefined ? initialData : null });
+
+            return;
+        }
+
+        executeStartWorkout(initialData);
     };
 
     const updateWorkoutName = (newName: string) => {
@@ -349,15 +384,15 @@ return s;
 
             return prev.map((ex, idx) => {
                 if (idx !== exerciseIndex) {
-return ex;
-}
+                    return ex;
+                }
 
                 return {
                     ...ex,
                     sets: ex.sets.map((s, sIdx) => {
                         if (sIdx !== setIndex) {
-return s;
-}
+                            return s;
+                        }
 
                         return { ...s, isFinished: !s.isFinished };
                     }),
@@ -368,6 +403,7 @@ return s;
         if (restSec > 0) {
             setActiveRest({
                 exerciseIndex,
+                setIndex,
                 remaining: restSec,
                 total: restSec,
             });
@@ -379,8 +415,8 @@ return s;
         setExercises((prev) =>
             prev.map((ex, idx) => {
                 if (idx !== exerciseIndex) {
-return ex;
-}
+                    return ex;
+                }
 
                 return { ...ex, restSeconds: seconds };
             })
@@ -389,10 +425,11 @@ return ex;
     };
 
     const adjustActiveRest = (seconds: number) => {
+        let exIndex = -1;
         setActiveRest((currentRest) => {
             if (!currentRest) {
-return null;
-}
+                return null;
+            }
 
             const newRemaining = Math.max(0, currentRest.remaining + seconds);
 
@@ -400,13 +437,29 @@ return null;
                 return null;
             }
 
+            exIndex = currentRest.exerciseIndex;
+
             return {
                 ...currentRest,
                 remaining: newRemaining,
                 total: Math.max(currentRest.total, newRemaining),
             };
         });
-        toast.message(seconds > 0 ? `+${seconds}s added` : `${seconds}s removed`);
+
+        if (exIndex !== -1) {
+            setExercises((prev) =>
+                prev.map((ex, idx) => {
+                    if (idx !== exIndex) {
+                        return ex;
+                    }
+
+                    const currentRestSec = ex.restSeconds !== undefined ? ex.restSeconds : 120;
+
+                    return { ...ex, restSeconds: Math.max(15, currentRestSec + seconds) };
+                })
+            );
+            toast.message(seconds > 0 ? `+${seconds}s added & saved to exercise` : `${seconds}s removed & saved to exercise`);
+        }
     };
 
     const skipActiveRest = () => {
@@ -499,6 +552,41 @@ return null;
             }}
         >
             {children}
+            {pendingWorkout && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-5 bg-neutral-955/80 bg-neutral-950/80 backdrop-blur-md">
+                    <div className="w-full max-w-sm rounded-3xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl text-center space-y-4">
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
+                            <AlertTriangle className="h-6 w-6" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <h3 className="text-base font-extrabold text-neutral-100">
+                                Start new workout?
+                            </h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                                You already have an active workout session in progress. Starting a new session will discard your current active workout.
+                            </p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setPendingWorkout(null)}
+                                className="flex-1 rounded-2xl border border-neutral-850 bg-neutral-800/40 py-2.5 text-xs font-bold text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100 transition-colors"
+                            >
+                                Keep current
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const data = pendingWorkout.initialData;
+                                    setPendingWorkout(null);
+                                    executeStartWorkout(data);
+                                }}
+                                className="flex-1 rounded-2xl bg-sky-500 py-2.5 text-xs font-bold text-white hover:bg-sky-600 transition-colors shadow-lg shadow-sky-500/10"
+                            >
+                                Start new
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </WorkoutContext.Provider>
     );
 }
