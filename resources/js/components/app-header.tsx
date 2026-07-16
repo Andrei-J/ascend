@@ -51,18 +51,20 @@ const mainNavItems: NavItem[] = [
         href: '/Workout',
         icon: Dumbbell,
     },
+    
+    {
+        title: 'Exercises',
+        href: '/Exercises',
+        icon: Folder,
+    },
 
     {
         title: 'History',
         href: '/History',
         icon: History,
-    },
-
-    {
-        title: 'Exercises',
-        href: '/Exercises',
-        icon: Folder,
     }
+
+    
 ];
 
 const rightNavItems: NavItem[] = [

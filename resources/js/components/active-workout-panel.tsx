@@ -9,17 +9,232 @@ import {
     AlertTriangle,
     Check,
     Dumbbell,
-    Timer
+    Timer,
+    SkipForward,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { useWorkout } from '@/hooks/use-workout';
+
+// ─── Rest Timer Modal ───────────────────────────────────────────────────────
+
+function RestTimerModal({
+    remaining,
+    total,
+    exerciseName,
+    setNumber,
+    totalTime,
+    isPaused,
+    onSkip,
+    onAdjust,
+    onPause,
+    onResume,
+    onReset,
+    onSkipTimer,
+}: {
+    remaining: number;
+    total: number;
+    exerciseName: string;
+    setNumber: number;
+    totalTime: number;
+    isPaused: boolean;
+    onSkip: () => void;
+    onAdjust: (seconds: number) => void;
+    onPause: () => void;
+    onResume: () => void;
+    onReset: () => void;
+    onSkipTimer: () => void;
+}) {
+    const SIZE = 220;
+    const STROKE = 10;
+    const RADIUS = (SIZE - STROKE) / 2;
+    const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+    const progress = Math.max(0, Math.min(1, remaining / total));
+    const dashOffset = CIRCUMFERENCE * (1 - progress);
+
+    const mins = Math.floor(remaining / 60);
+    const secs = remaining % 60;
+
+    const ringColor = '#84cc16'; // lime-500
+    const glowColor = 'rgba(132,204,22,0.15)';
+
+    const formattedTimer = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+    const formatTotalTime = (totalSeconds: number) => {
+        const hrs = Math.floor(totalSeconds / 3600);
+        const mins = Math.floor((totalSeconds % 3600) / 60);
+        const secs = totalSeconds % 60;
+        const pad = (num: number) => String(num).padStart(2, '0');
+        if (hrs > 0) {
+            return `${hrs}:${pad(mins)}:${pad(secs)}`;
+        }
+        return `${pad(mins)}:${pad(secs)}`;
+    };
+
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            {/* Blurred backdrop */}
+            <div
+                className="absolute inset-0 bg-neutral-950/80 backdrop-blur-md"
+                onClick={onSkip}
+            />
+
+            {/* Panel */}
+            <div
+                className="relative z-10 w-full max-w-sm rounded-3xl border border-emerald-950/40 bg-[#0c1917] pb-8 pt-6 px-6 shadow-2xl text-neutral-100"
+                style={{ animation: 'slideUpPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both' }}
+            >
+                {/* Header line with Exercise name & dismiss X */}
+                <div className="flex items-center justify-between mb-4 border-b border-emerald-950/30 pb-2">
+                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-neutral-400 truncate max-w-[80%]">
+                        {exerciseName}
+                    </span>
+                    <button
+                        type="button"
+                        onClick={onSkip}
+                        className="text-neutral-500 hover:text-neutral-350 transition-colors p-1 cursor-pointer"
+                        title="Close Rest Timer"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
+
+                {/* Circular countdown */}
+                <div className="flex justify-center mb-6">
+                    <div className="relative" style={{ width: SIZE, height: SIZE }}>
+                        {/* Glow */}
+                        <div
+                            className="absolute inset-0 rounded-full transition-all duration-1000"
+                            style={{ boxShadow: `0 0 35px 4px ${glowColor}` }}
+                        />
+
+                        <svg width={SIZE} height={SIZE} style={{ transform: 'rotate(-90deg)' }}>
+                            {/* Track (dark forest green) */}
+                            <circle
+                                cx={SIZE / 2}
+                                cy={SIZE / 2}
+                                r={RADIUS}
+                                fill="none"
+                                stroke="#1c2d27"
+                                strokeWidth={STROKE}
+                            />
+                            {/* Progress arc (bright green) */}
+                            <circle
+                                cx={SIZE / 2}
+                                cy={SIZE / 2}
+                                r={RADIUS}
+                                fill="none"
+                                stroke={ringColor}
+                                strokeWidth={STROKE}
+                                strokeLinecap="round"
+                                strokeDasharray={CIRCUMFERENCE}
+                                strokeDashoffset={dashOffset}
+                                style={{ transition: 'stroke-dashoffset 1s linear, stroke 1s ease' }}
+                            />
+                        </svg>
+
+                        {/* Center time digits */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span
+                                className="font-mono font-black tabular-nums leading-none tracking-tight"
+                                style={{
+                                    fontSize: '3.25rem',
+                                    color: ringColor,
+                                textShadow: `0 0 15px ${glowColor}`,
+                                }}
+                            >
+                                {formattedTimer}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* "Rest" label in green */}
+                <div className="text-center font-extrabold text-xl text-[#84cc16] tracking-wider uppercase mb-6">
+                    Rest
+                </div>
+
+                {/* Info block: Sets / Total Time */}
+                <div className="w-full max-w-[240px] mx-auto text-xs space-y-3 mb-8 border-y border-emerald-950/20 py-4">
+                    <div className="flex justify-between items-center">
+                        <span className="font-bold tracking-widest text-neutral-400">SETS</span>
+                        <span className="text-neutral-200 font-bold font-mono text-sm">{setNumber}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="font-bold tracking-widest text-neutral-400">TOTAL TIME</span>
+                        <span className="text-neutral-200 font-bold font-mono text-sm">{formatTotalTime(totalTime)}</span>
+                    </div>
+                </div>
+
+                {/* Adjust buttons: -30 / +30 */}
+                <div className="flex items-center justify-center gap-4 mb-5">
+                    <button
+                        type="button"
+                        onClick={() => onAdjust(-30)}
+                        className="rounded-xl border border-emerald-900/45 bg-neutral-900/60 hover:bg-neutral-800 px-4 py-2 text-xs font-black text-neutral-400 hover:text-neutral-200 transition-colors cursor-pointer"
+                        title="Subtract 30 seconds"
+                    >
+                        -30s
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => onAdjust(30)}
+                        className="rounded-xl border border-emerald-900/45 bg-neutral-900/60 hover:bg-neutral-800 px-4 py-2 text-xs font-black text-neutral-400 hover:text-neutral-200 transition-colors cursor-pointer"
+                        title="Add 30 seconds"
+                    >
+                        +30s
+                    </button>
+                </div>
+
+                {/* Control buttons: PAUSE / RESET */}
+                <div className="flex gap-4">
+                    <button
+                        type="button"
+                        onClick={isPaused ? onResume : onPause}
+                        className="flex-1 rounded-xl bg-yellow-400 py-3 text-xs font-black uppercase tracking-wider text-neutral-950 shadow-md transition-all hover:bg-yellow-350 active:scale-[0.97] cursor-pointer"
+                    >
+                        {isPaused ? 'RESUME' : 'PAUSE'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onReset}
+                        className="flex-1 rounded-xl bg-yellow-400 py-3 text-xs font-black uppercase tracking-wider text-neutral-950 shadow-md transition-all hover:bg-yellow-350 active:scale-[0.97] cursor-pointer"
+                    >
+                        RESET
+                    </button>
+                </div>
+
+                {/* Skip Rest text button */}
+                <button
+                    type="button"
+                    onClick={() => {
+                        onSkipTimer();
+                        onSkip();
+                    }}
+                    className="w-full text-center text-xs font-bold text-neutral-500 hover:text-neutral-350 transition-colors mt-5 uppercase tracking-widest cursor-pointer"
+                >
+                    Skip Rest
+                </button>
+            </div>
+
+            <style>{`
+                @keyframes slideUpPop {
+                    from { opacity: 0; transform: translateY(40px) scale(0.96); }
+                    to   { opacity: 1; transform: translateY(0)   scale(1);    }
+                }
+            `}</style>
+        </div>,
+        document.body
+    );
+}
 
 interface ExerciseLibraryItem {
     id: number;
     name: string;
     category: string;
     muscleGroup: string;
+    restSeconds?: number;
 }
 
 export function ActiveWorkoutPanel() {
@@ -35,16 +250,28 @@ export function ActiveWorkoutPanel() {
         addActiveExercise,
         removeActiveExercise,
         addActiveSet,
+        removeActiveSet,
         updateActiveSet,
         toggleSetCompleted,
         updateExerciseRest,
         adjustActiveRest,
         skipActiveRest,
+        pauseActiveRest,
+        resumeActiveRest,
+        resetActiveRest,
         cancelWorkout,
         finishWorkout,
     } = useWorkout();
 
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+    const [showRestPopup, setShowRestPopup] = useState(false);
+
+    // Auto-close popup when activeRest is cleared or timer finishes
+    useEffect(() => {
+        if (!activeRest) {
+            setShowRestPopup(false);
+        }
+    }, [activeRest]);
     const [showAddExercise, setShowAddExercise] = useState(false);
     const [exerciseLibrary, setExerciseLibrary] = useState<ExerciseLibraryItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -299,19 +526,20 @@ return null;
                                 {/* Sets Grid */}
                                 <div className="space-y-2">
                                     {/* Grid Header */}
-                                    <div className="grid grid-cols-[36px_1fr_72px_72px_36px] gap-2.5 px-1 items-center text-[10px] font-black uppercase text-neutral-500 tracking-widest">
+                                    <div className="grid grid-cols-[36px_1fr_64px_64px_36px_36px] gap-2 px-1 items-center text-[10px] font-black uppercase text-neutral-500 tracking-widest">
                                         <span className="text-center">Set</span>
                                         <span>Previous</span>
                                         <span className="text-center">LBS</span>
                                         <span className="text-center">Reps</span>
                                         <span className="text-center">✓</span>
+                                        <span className="text-center"></span>
                                     </div>
 
                                     {/* Set Rows */}
                                     {ex.sets.map((set, setIndex) => (
                                         <div key={setIndex} className="space-y-2">
                                             <div
-                                                className={`grid grid-cols-[36px_1fr_72px_72px_36px] gap-2.5 px-1 items-center py-0.5 rounded-lg transition-colors ${
+                                                className={`grid grid-cols-[36px_1fr_64px_64px_36px_36px] gap-2 px-1 items-center py-0.5 rounded-lg transition-colors ${
                                                     set.isFinished ? 'bg-emerald-500/5' : ''
                                                 }`}
                                             >
@@ -358,7 +586,7 @@ return null;
                                                 <button
                                                     type="button"
                                                     onClick={() => toggleSetCompleted(exIndex, setIndex)}
-                                                    className={`flex h-7 w-7 items-center justify-center rounded-lg border transition-all ${
+                                                    className={`flex h-7 w-7 items-center justify-center rounded-lg border transition-all cursor-pointer ${
                                                         set.isFinished
                                                             ? 'bg-emerald-500 border-emerald-500 text-neutral-950 font-bold'
                                                             : 'border-neutral-700 bg-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300'
@@ -366,75 +594,69 @@ return null;
                                                 >
                                                     <Check className="h-3.5 w-3.5 stroke-[3px]" />
                                                 </button>
+
+                                                {/* Delete Set Button */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeActiveSet(exIndex, setIndex)}
+                                                    className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-800 hover:text-rose-500 transition-colors cursor-pointer"
+                                                    title="Delete set"
+                                                >
+                                                    <X className="h-3.5 w-3.5" />
+                                                </button>
                                             </div>
 
-                                             {/* Rest timer spacer */}
-                                             <div className="flex flex-col gap-2 py-1 px-1">
-                                                 {activeRest && activeRest.exerciseIndex === exIndex && activeRest.setIndex === setIndex ? (
-                                                     <div className="space-y-2 w-full animate-in fade-in slide-in-from-top duration-300">
-                                                         {/* Timer Info and Adjust Buttons */}
-                                                         <div className="flex items-center justify-between">
-                                                             <div className="flex items-center gap-1.5 font-black text-sky-400 text-[10px] tracking-widest uppercase animate-pulse">
-                                                                 <Timer className="h-3.5 w-3.5" />
-                                                                 <span>Resting: {formatRestTime(activeRest.remaining)}</span>
-                                                             </div>
-                                                             <div className="flex items-center gap-1">
-                                                                 <button
-                                                                     type="button"
-                                                                     onClick={() => adjustActiveRest(15)}
-                                                                     className="rounded-lg bg-sky-500/10 hover:bg-sky-500/20 px-2 py-0.5 text-[9px] font-black text-sky-400 border border-sky-500/20 transition-all hover:scale-105 active:scale-95"
-                                                                     title="Add 15s to rest and update exercise default"
-                                                                 >
-                                                                     +15s
-                                                                 </button>
-                                                                 <button
-                                                                     type="button"
-                                                                     onClick={() => adjustActiveRest(-15)}
-                                                                     className="rounded-lg bg-sky-500/10 hover:bg-sky-500/20 px-2 py-0.5 text-[9px] font-black text-sky-400 border border-sky-500/20 transition-all hover:scale-105 active:scale-95"
-                                                                     title="Remove 15s from rest and update exercise default"
-                                                                 >
-                                                                     -15s
-                                                                 </button>
-                                                             </div>
-                                                         </div>
-
-                                                         {/* Glowing Animated Progress Bar */}
-                                                         <div className="relative w-full h-1.5 bg-neutral-900 rounded-full overflow-hidden border border-neutral-800/60 shadow-[inset_0_1px_2px_rgba(0,0,0,0.4)]">
-                                                             <div 
-                                                                 className="absolute top-0 left-0 h-full bg-gradient-to-r from-sky-400 via-sky-500 to-indigo-500 rounded-full transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(56,189,248,0.4)]"
-                                                                 style={{ width: `${Math.min(100, Math.max(0, (activeRest.remaining / activeRest.total) * 100))}%` }}
-                                                             />
-                                                         </div>
+                                             {/* Rest timer row */}
+                                             <div className="flex items-center gap-2 py-1 px-1">
+                                                 <div className="h-[1px] flex-1 bg-sky-950/20" />
+                                                 <div className="flex items-center gap-2 z-10">
+                                                     {activeRest && activeRest.exerciseIndex === exIndex && activeRest.setIndex === setIndex ? (
+                                                         <button
+                                                             type="button"
+                                                             onClick={() => setShowRestPopup(true)}
+                                                             className="flex items-center gap-1 text-[10px] font-black tracking-widest text-sky-400 animate-pulse hover:text-sky-300 transition-colors cursor-pointer"
+                                                             title="Click to open Rest Timer popup"
+                                                         >
+                                                             <Timer className="h-3 w-3" />
+                                                             <span>REST: {formatRestTime(activeRest.remaining)}</span>
+                                                         </button>
+                                                     ) : (
+                                                         <span className="text-[10px] font-black tracking-widest text-sky-400/60">
+                                                             REST: {formatRestTime(ex.restSeconds !== undefined ? ex.restSeconds : 120)}
+                                                         </span>
+                                                     )}
+                                                     <div className="flex items-center gap-1 bg-neutral-900/40 rounded-lg p-0.5 border border-neutral-800/40">
+                                                         <button
+                                                             type="button"
+                                                             onClick={() => {
+                                                                 if (activeRest && activeRest.exerciseIndex === exIndex && activeRest.setIndex === setIndex) {
+                                                                     adjustActiveRest(15);
+                                                                 } else {
+                                                                     updateExerciseRest(exIndex, Math.max(15, (ex.restSeconds !== undefined ? ex.restSeconds : 120) + 15));
+                                                                 }
+                                                             }}
+                                                             className="rounded bg-neutral-800/60 hover:bg-neutral-750 px-1.5 py-0.2 text-[8px] font-extrabold text-neutral-400 hover:text-sky-400 transition-colors cursor-pointer"
+                                                             title="Increase rest duration (+15s)"
+                                                         >
+                                                             +15s
+                                                         </button>
+                                                         <button
+                                                             type="button"
+                                                             onClick={() => {
+                                                                 if (activeRest && activeRest.exerciseIndex === exIndex && activeRest.setIndex === setIndex) {
+                                                                     adjustActiveRest(-15);
+                                                                 } else {
+                                                                     updateExerciseRest(exIndex, Math.max(15, (ex.restSeconds !== undefined ? ex.restSeconds : 120) - 15));
+                                                                 }
+                                                             }}
+                                                             className="rounded bg-neutral-800/60 hover:bg-neutral-750 px-1.5 py-0.2 text-[8px] font-extrabold text-neutral-400 hover:text-sky-400 transition-colors cursor-pointer"
+                                                             title="Decrease rest duration (-15s)"
+                                                         >
+                                                             -15s
+                                                         </button>
                                                      </div>
-                                                 ) : (
-                                                     <div className="flex items-center gap-2">
-                                                         <div className="h-[1px] flex-1 bg-sky-950/20" />
-                                                         <div className="flex items-center gap-2 z-10">
-                                                             <span className="text-[10px] font-black tracking-widest text-sky-400/60">
-                                                                 REST: {formatRestTime(ex.restSeconds !== undefined ? ex.restSeconds : 120)}
-                                                             </span>
-                                                             <div className="flex items-center gap-1 bg-neutral-900/40 rounded-lg p-0.5 border border-neutral-800/40">
-                                                                 <button
-                                                                     type="button"
-                                                                     onClick={() => updateExerciseRest(exIndex, Math.max(15, (ex.restSeconds !== undefined ? ex.restSeconds : 120) + 15))}
-                                                                     className="rounded bg-neutral-800/60 hover:bg-neutral-750 px-1.5 py-0.2 text-[8px] font-extrabold text-neutral-400 hover:text-sky-400 transition-colors"
-                                                                     title="Increase exercise rest duration (+15s)"
-                                                                 >
-                                                                     +15s
-                                                                 </button>
-                                                                 <button
-                                                                     type="button"
-                                                                     onClick={() => updateExerciseRest(exIndex, Math.max(15, (ex.restSeconds !== undefined ? ex.restSeconds : 120) - 15))}
-                                                                     className="rounded bg-neutral-800/60 hover:bg-neutral-750 px-1.5 py-0.2 text-[8px] font-extrabold text-neutral-400 hover:text-sky-400 transition-colors"
-                                                                     title="Decrease exercise rest duration (-15s)"
-                                                                 >
-                                                                     -15s
-                                                                 </button>
-                                                             </div>
-                                                         </div>
-                                                         <div className="h-[1px] flex-1 bg-sky-950/20" />
-                                                     </div>
-                                                 )}
+                                                 </div>
+                                                 <div className="h-[1px] flex-1 bg-sky-950/20" />
                                              </div>
                                         </div>
                                     ))}
@@ -558,7 +780,7 @@ return null;
                                     key={item.id}
                                     type="button"
                                     onClick={() => {
-                                        addActiveExercise(item.id, item.name);
+                                        addActiveExercise(item.id, item.name, item.restSeconds);
                                         setShowAddExercise(false);
                                         setSearchQuery('');
                                     }}
@@ -582,44 +804,22 @@ return null;
                 </div>
             )}
 
-            {/* Active Rest Floating overlay at the bottom of the scroll view */}
-            {activeRest && (
-                <div className="mx-5 mb-4 p-3 bg-neutral-900 border border-neutral-850 rounded-2xl flex items-center justify-between shadow-2xl animate-in slide-in-from-bottom duration-300 shrink-0">
-                    <div className="flex items-center gap-2 max-w-[50%]">
-                        <Timer className="h-4 w-4 text-sky-500 animate-pulse shrink-0" />
-                        <div className="flex flex-col text-left truncate">
-                            <span className="text-[9px] uppercase font-black text-neutral-500 tracking-wider truncate">
-                                Rest Timer ({exercises[activeRest.exerciseIndex]?.name || 'Workout'})
-                            </span>
-                            <span className="text-sm font-black font-mono text-sky-400">
-                                {formatRestTime(activeRest.remaining)}
-                            </span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                            type="button"
-                            onClick={() => adjustActiveRest(30)}
-                            className="rounded-lg bg-neutral-850 hover:bg-neutral-800 px-2 py-1 text-[10px] font-extrabold text-neutral-300 transition-colors"
-                        >
-                            +30s
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => adjustActiveRest(-30)}
-                            className="rounded-lg bg-neutral-850 hover:bg-neutral-800 px-2 py-1 text-[10px] font-extrabold text-neutral-300 transition-colors"
-                        >
-                            -30s
-                        </button>
-                        <button
-                            type="button"
-                            onClick={skipActiveRest}
-                            className="rounded-lg bg-rose-500/10 hover:bg-rose-500/20 px-2 py-1 text-[10px] font-extrabold text-rose-400 transition-colors"
-                        >
-                            Skip
-                        </button>
-                    </div>
-                </div>
+            {/* ── Rest Timer Popup Modal ── */}
+            {activeRest && showRestPopup && (
+                <RestTimerModal
+                    remaining={activeRest.remaining}
+                    total={activeRest.total}
+                    exerciseName={exercises[activeRest.exerciseIndex]?.name || 'Workout'}
+                    setNumber={activeRest.setIndex + 1}
+                    totalTime={elapsedSeconds}
+                    isPaused={activeRest.isPaused || false}
+                    onSkip={() => setShowRestPopup(false)}
+                    onAdjust={adjustActiveRest}
+                    onPause={pauseActiveRest}
+                    onResume={resumeActiveRest}
+                    onReset={resetActiveRest}
+                    onSkipTimer={skipActiveRest}
+                />
             )}
         </div>
     );

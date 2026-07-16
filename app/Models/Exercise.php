@@ -14,6 +14,7 @@ class Exercise extends Model
         'instructions',
         'safety_info',
         'equipment',
+        'rest_seconds',
     ];
 
     protected $casts = [

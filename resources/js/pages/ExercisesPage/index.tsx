@@ -13,6 +13,7 @@ interface ExerciseType {
     equipment: string;
     difficulty: string;
     instructions: string;
+    restSeconds: number;
     lastPerformed: string | null;
 }
 
@@ -33,6 +34,12 @@ function getDifficultyColor(difficulty: string) {
     
     // Default fallback if no match
     return 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300';
+}
+
+function formatSecondsToTime(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${String(secs).padStart(2, '0')}`;
 }
 
 export default function Exercise({
@@ -56,6 +63,7 @@ export default function Exercise({
         equipment: '',
         difficulty: '',
         instructions: '',
+        restSeconds: '2:00',
     });
 
     // Handle opening modal for CREATE
@@ -76,6 +84,7 @@ export default function Exercise({
             equipment: exercise.equipment,
             difficulty: exercise.difficulty,
             instructions: exercise.instructions,
+            restSeconds: formatSecondsToTime(exercise.restSeconds ?? 120),
         });
         clearErrors();
         setIsModalOpen(true);
@@ -288,6 +297,26 @@ export default function Exercise({
                                 )}
                             </div>
 
+                            {/* Default Rest Timer */}
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                    Default Rest Timer (minutes)
+                                </label>
+                                <Input
+                                    type="text"
+                                    value={data.restSeconds}
+                                    onChange={(e) =>
+                                        setData('restSeconds', e.target.value)
+                                    }
+                                    placeholder="e.g. 1:00 or 2:30"
+                                />
+                                {errors.restSeconds && (
+                                    <span className="mt-1 text-xs text-red-500">
+                                        {errors.restSeconds}
+                                    </span>
+                                )}
+                            </div>
+
                             {/* Description */}
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
@@ -446,7 +475,7 @@ export default function Exercise({
                                             )}
                                         </div>
 
-                                        {/* Muscle group + equipment chips */}
+                                        {/* Muscle group + equipment + rest timer chips */}
                                         <div className="flex flex-wrap gap-2">
                                             {exercise.muscleGroup && (
                                                 <div className="flex items-center gap-1.5 rounded-lg bg-neutral-100 px-2.5 py-1 dark:bg-neutral-800">
@@ -461,6 +490,14 @@ export default function Exercise({
                                                     <Dumbbell className="h-3 w-3 text-neutral-400 dark:text-neutral-500" />
                                                     <span className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
                                                         {exercise.equipment}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {exercise.restSeconds !== undefined && (
+                                                <div className="flex items-center gap-1.5 rounded-lg bg-neutral-100 px-2.5 py-1 dark:bg-neutral-800" title="Default rest timer">
+                                                    <Clock className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                                                    <span className="text-[11px] font-medium text-neutral-700 dark:text-neutral-300">
+                                                        {Math.floor(exercise.restSeconds / 60)}m {exercise.restSeconds % 60}s
                                                     </span>
                                                 </div>
                                             )}

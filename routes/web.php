@@ -4,13 +4,14 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\WorkoutController;
 use App\Http\Controllers\ExercisesController;
+use App\Http\Controllers\AnalyticsController;
 
 Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', [AnalyticsController::class, 'dashboard'])->name('dashboard');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -23,6 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return response()->json(app(\App\Services\ExerciseService::class)->getExercisesForDashboard());
     })->name('api.exercises');
     Route::get('/History', [WorkoutController::class, 'history'])->name('history');
+    Route::get('/Analytics', [AnalyticsController::class, 'index'])->name('analytics');
 });
 
 

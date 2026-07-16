@@ -35,6 +35,7 @@ class ExerciseService
                                     ? implode(', ', $exercise->equipment)
                                     : $exercise->equipment,
                 'instructions'   => $exercise->instructions,
+                'restSeconds'    => $exercise->rest_seconds !== null ? (int)$exercise->rest_seconds : 120,
                 'lastPerformed' => null, // future: pull from workout logs
             ];
         });

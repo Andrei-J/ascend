@@ -51,6 +51,7 @@ class ExercisesController extends Controller
             'difficulty'   => 'required|string|max:255',
             'instructions' => 'nullable|string|max:1000',
             'safety_info'  => 'nullable|string|max:1000',
+            'restSeconds'  => 'required|string|max:10',
         ]);
 
         // 2. Map frontend field names → actual DB column names.
@@ -68,6 +69,7 @@ class ExercisesController extends Controller
             'difficulty'   => $validatedData['difficulty'],
             'instructions' => $validatedData['instructions'] ?? null,
             'safety_info'  => $validatedData['safety_info'] ?? null,
+            'rest_seconds' => $this->parseRestSeconds($validatedData['restSeconds']),
             'source'       => 'manual',                 // distinguish from API imports
         ];
 
@@ -104,6 +106,7 @@ class ExercisesController extends Controller
             'difficulty'   => 'required|string|max:255',
             'instructions' => 'nullable|string|max:1000',
             'safety_info'  => 'nullable|string|max:1000',
+            'restSeconds'  => 'required|string|max:10',
         ]);
 
         // Map frontend field names → actual DB column names.
@@ -121,6 +124,7 @@ class ExercisesController extends Controller
             'difficulty'   => $validatedData['difficulty'],
             'instructions' => $validatedData['instructions'] ?? null,
             'safety_info'  => $validatedData['safety_info'] ?? null,
+            'rest_seconds' => $this->parseRestSeconds($validatedData['restSeconds']),
         ];
 
         try {
@@ -142,5 +146,22 @@ class ExercisesController extends Controller
     {
          $this->exerciseService->deleteExercise($id);
          return redirect()->back();
+    }
+
+    private function parseRestSeconds($val)
+    {
+        if (empty($val)) {
+            return 120;
+        }
+        if (strpos($val, ':') !== false) {
+            $parts = explode(':', $val);
+            if (count($parts) === 2) {
+                return ((int)$parts[0] * 60) + (int)$parts[1];
+            }
+        }
+        if (is_numeric($val)) {
+            return (int)$val;
+        }
+        return 120;
     }
 }
