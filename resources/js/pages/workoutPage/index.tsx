@@ -1,4 +1,4 @@
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import {
     Plus,
     FolderOpen,
@@ -14,8 +14,12 @@ import {
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useWorkout } from '@/hooks/use-workout';
-
-// ─── Types ───────────────────────────────────────────────────────────────────
+import {
+    EdgeHeader,
+    EdgeCard,
+    EdgeBadge,
+    EdgeButton,
+} from '@/lib/edge/engine';
 
 interface TemplateExercise {
     exercise_id: number;
@@ -46,19 +50,11 @@ interface ExerciseType {
     difficulty: string;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 function exercisePreview(exercises: string[], max = 3): string {
-    if (exercises.length === 0) {
-return 'No exercises';
-}
-
+    if (exercises.length === 0) return 'No exercises configured';
     const shown = exercises.slice(0, max).join(', ');
-
-    return exercises.length > max ? `${shown}, …` : shown;
+    return exercises.length > max ? `${shown}, +${exercises.length - max} more` : shown;
 }
-
-// ─── EllipsisMenu ─────────────────────────────────────────────────────────────
 
 function EllipsisMenu({
     id,
@@ -77,17 +73,13 @@ function EllipsisMenu({
     const isOpen = activeMenu === id;
 
     useEffect(() => {
-        if (!isOpen) {
-return;
-}
-
+        if (!isOpen) return;
         function handleClick(e: MouseEvent) {
             if (ref.current && !ref.current.contains(e.target as Node)) {
                 setActiveMenu(null);
             }
         }
         document.addEventListener('mousedown', handleClick);
-
         return () => document.removeEventListener('mousedown', handleClick);
     }, [isOpen, setActiveMenu]);
 
@@ -98,29 +90,29 @@ return;
                     e.stopPropagation();
                     setActiveMenu(isOpen ? null : id);
                 }}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-700 hover:text-neutral-200"
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
             >
                 <MoreHorizontal className="h-4 w-4" />
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 z-50 mt-1 w-36 overflow-hidden rounded-xl border border-neutral-700 bg-neutral-800 shadow-xl">
+                <div className="absolute right-0 z-50 mt-1 w-36 overflow-hidden rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                     {onEdit && (
                         <button
-                            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-neutral-200 transition-colors hover:bg-neutral-700"
+                            className="flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors cursor-pointer"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setActiveMenu(null);
                                 onEdit();
                             }}
                         >
-                            <Pencil className="h-3.5 w-3.5 text-neutral-400" />
-                            Edit
+                            <Pencil className="h-3.5 w-3.5 text-indigo-400" />
+                            Edit Template
                         </button>
                     )}
                     {onDelete && (
                         <button
-                            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-rose-400 transition-colors hover:bg-neutral-700"
+                            className="flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition-colors cursor-pointer"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setActiveMenu(null);
@@ -136,8 +128,6 @@ return;
         </div>
     );
 }
-
-// ─── TemplateCard ─────────────────────────────────────────────────────────────
 
 function TemplateCard({
     template,
@@ -159,14 +149,18 @@ function TemplateCard({
     menuKey: string;
 }) {
     return (
-        <div
-            onClick={onClick}
-            className="group flex flex-col gap-3 rounded-xl border border-neutral-700/60 bg-neutral-800/50 p-4 transition-all duration-200 hover:border-neutral-600 hover:bg-neutral-800 hover:shadow-lg cursor-pointer"
-        >
-            <div className="flex items-start justify-between gap-2">
-                <span className={`font-semibold text-neutral-100 leading-snug ${compact ? 'text-sm' : 'text-base'}`}>
-                    {template.name}
-                </span>
+        <EdgeCard
+            variant="glass"
+            elevation="md"
+            className="group cursor-pointer hover:border-indigo-500/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] transition-all duration-300"
+            title={
+                <div className="flex items-start justify-between gap-2 w-full">
+                    <span className={`font-bold text-white leading-snug group-hover:text-indigo-300 transition-colors ${compact ? 'text-sm' : 'text-base'}`}>
+                        {template.name}
+                    </span>
+                </div>
+            }
+            headerAction={
                 <div onClick={(e) => e.stopPropagation()}>
                     <EllipsisMenu
                         id={menuKey}
@@ -176,16 +170,24 @@ function TemplateCard({
                         onDelete={onDelete}
                     />
                 </div>
+            }
+        >
+            <div onClick={onClick} className="space-y-3 pt-1">
+                <p className="text-xs leading-relaxed text-slate-400 line-clamp-2">
+                    {exercisePreview(template.exercises, compact ? 2 : 3)}
+                </p>
+                <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                        {template.exercises.length} {template.exercises.length === 1 ? 'Exercise' : 'Exercises'}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-400 group-hover:translate-x-0.5 transition-transform">
+                        Start <ChevronRight className="w-3 h-3" />
+                    </span>
+                </div>
             </div>
-
-            <p className="text-xs leading-relaxed text-neutral-400 line-clamp-2">
-                {exercisePreview(template.exercises, compact ? 2 : 3)}
-            </p>
-        </div>
+        </EdgeCard>
     );
 }
-
-// ─── FolderRow ────────────────────────────────────────────────────────────────
 
 function FolderRow({
     folder,
@@ -209,30 +211,28 @@ function FolderRow({
     const menuId = `folder-row-${folder.id}`;
 
     return (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 overflow-hidden">
-            {/* Folder header */}
+        <div className="rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden backdrop-blur-md">
             <button
                 onClick={onToggle}
-                className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-neutral-800/60"
+                className="flex w-full items-center gap-2.5 px-4 py-3 text-left transition-colors hover:bg-white/5 cursor-pointer"
             >
-                <FolderOpen className="h-4 w-4 shrink-0 text-neutral-500" />
-                <span className="flex-1 text-xs font-bold uppercase tracking-widest text-neutral-300">
+                <FolderOpen className="h-4 w-4 shrink-0 text-indigo-400" />
+                <span className="flex-1 text-xs font-extrabold uppercase tracking-wider text-slate-200">
                     {folder.name}{' '}
-                    <span className="font-normal text-neutral-600">({folder.templates.length})</span>
+                    <span className="font-normal text-slate-500">({folder.templates.length})</span>
                 </span>
                 {isOpen ? (
-                    <ChevronDown className="h-3.5 w-3.5 text-neutral-600" />
+                    <ChevronDown className="h-4 w-4 text-slate-400" />
                 ) : (
-                    <ChevronRight className="h-3.5 w-3.5 text-neutral-600" />
+                    <ChevronRight className="h-4 w-4 text-slate-400" />
                 )}
                 <div onClick={(e) => e.stopPropagation()}>
                     <EllipsisMenu id={menuId} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
                 </div>
             </button>
 
-            {/* Folder contents */}
             {isOpen && (
-                <div className="flex flex-col gap-2 border-t border-neutral-800 p-3">
+                <div className="flex flex-col gap-2.5 border-t border-white/10 p-3 bg-slate-950/40">
                     {folder.templates.map((t) => (
                         <TemplateCard
                             key={t.id}
@@ -252,8 +252,6 @@ function FolderRow({
     );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function WorkoutPage({
     folders = [],
     myTemplates = [],
@@ -269,10 +267,8 @@ export default function WorkoutPage({
     const { startWorkout } = useWorkout();
 
     const handleStartTemplate = (template: Template) => {
-        // Map rawExercises to their name from our exercise library
         const mapped = template.rawExercises.map((rawEx) => {
             const match = exercises.find((ex) => ex.id === rawEx.exercise_id);
-
             return {
                 exercise_id: rawEx.exercise_id,
                 name: match ? match.name : 'Unknown Exercise',
@@ -287,7 +283,15 @@ export default function WorkoutPage({
         });
     };
 
-    // Modal state
+    const toggleFolder = (id: number) => {
+        setOpenFolders((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Template | null>(null);
@@ -300,20 +304,6 @@ export default function WorkoutPage({
         exercises: [] as { exercise_id: number; name: string; sets: { weight: number | string; reps: number | string; unit?: string }[] }[],
     });
 
-    function toggleFolder(id: number) {
-        setOpenFolders((prev) => {
-            const next = new Set(prev);
-
-            if (next.has(id)) {
-                next.delete(id);
-            } else {
-                next.add(id);
-            }
-
-            return next;
-        });
-    }
-
     const handleCreate = () => {
         setEditingId(null);
         reset();
@@ -323,21 +313,20 @@ export default function WorkoutPage({
 
     const handleEdit = (template: Template) => {
         setEditingId(template.id);
-        const mappedExs = template.rawExercises.map((rawEx) => {
-            const matchedEx = exercises.find((e) => e.id === rawEx.exercise_id);
-
+        clearErrors();
+        const mappedEx = template.rawExercises.map((rawEx) => {
+            const match = exercises.find((ex) => ex.id === rawEx.exercise_id);
             return {
                 exercise_id: rawEx.exercise_id,
-                name: matchedEx ? matchedEx.name : 'Unknown Exercise',
+                name: match ? match.name : 'Unknown Exercise',
                 sets: rawEx.sets,
             };
         });
         setData({
             name: template.name,
             folderName: template.folderName || '',
-            exercises: mappedExs,
+            exercises: mappedEx,
         });
-        clearErrors();
         setIsModalOpen(true);
     };
 
@@ -346,57 +335,47 @@ export default function WorkoutPage({
     };
 
     const confirmDelete = () => {
-        if (!deleteTarget) {
-return;
-}
-
+        if (!deleteTarget) return;
         setIsDeleting(true);
-        router.delete(`/Workout/delete/${deleteTarget.id}`, {
-            onFinish: () => {
-                setIsDeleting(false);
-                setDeleteTarget(null);
-            },
-        });
+        window.location.href = `/Workout/delete/${deleteTarget.id}`;
     };
 
-    const addExercise = (exerciseId: number, exerciseName: string) => {
+    const addExercise = (exerciseId: number, name: string) => {
         setData('exercises', [
             ...data.exercises,
             {
                 exercise_id: exerciseId,
-                name: exerciseName,
+                name,
                 sets: [{ weight: 60, reps: 10, unit: 'kg' }],
             },
         ]);
     };
 
     const removeExercise = (index: number) => {
-        const next = [...data.exercises];
-        next.splice(index, 1);
-        setData('exercises', next);
+        setData('exercises', data.exercises.filter((_, i) => i !== index));
     };
 
-    const addSet = (exerciseIndex: number) => {
-        const next = [...data.exercises];
-        const lastSet = next[exerciseIndex].sets[next[exerciseIndex].sets.length - 1];
-        next[exerciseIndex].sets.push({
-            weight: lastSet ? lastSet.weight : 60,
-            reps: lastSet ? lastSet.reps : 10,
-            unit: lastSet && lastSet.unit ? lastSet.unit : 'kg',
-        });
-        setData('exercises', next);
+    const addSet = (exIndex: number) => {
+        const currentSets = data.exercises[exIndex].sets;
+        const lastSet = currentSets[currentSets.length - 1] || { weight: 60, reps: 10, unit: 'kg' };
+        const updated = [...data.exercises];
+        updated[exIndex].sets.push({ ...lastSet });
+        setData('exercises', updated);
     };
 
-    const removeSet = (exerciseIndex: number, setIndex: number) => {
-        const next = [...data.exercises];
-        next[exerciseIndex].sets.splice(setIndex, 1);
-        setData('exercises', next);
+    const removeSet = (exIndex: number, setIndex: number) => {
+        const updated = [...data.exercises];
+        updated[exIndex].sets = updated[exIndex].sets.filter((_, i) => i !== setIndex);
+        setData('exercises', updated);
     };
 
-    const updateSet = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'unit', value: string) => {
-        const next = [...data.exercises];
-        next[exerciseIndex].sets[setIndex][field] = value;
-        setData('exercises', next);
+    const updateSet = (exIndex: number, setIndex: number, field: string, val: any) => {
+        const updated = [...data.exercises];
+        updated[exIndex].sets[setIndex] = {
+            ...updated[exIndex].sets[setIndex],
+            [field]: val,
+        };
+        setData('exercises', updated);
     };
 
     const submit = (e: React.FormEvent) => {
@@ -419,85 +398,75 @@ return;
 
     return (
         <>
-            <Head title="Workout" />
+            <Head title="Workout - Ascend EDGE" />
 
-            {/* ── Delete Confirmation Modal ── */}
             {deleteTarget && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
                     <div
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
                         onClick={() => !isDeleting && setDeleteTarget(null)}
                     />
-                    <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-neutral-700 bg-neutral-900 shadow-2xl">
-                        <div className="h-1 w-full bg-gradient-to-r from-rose-500 to-red-500" />
+                    <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-rose-500/30 bg-slate-900 shadow-2xl">
+                        <div className="h-1.5 w-full bg-gradient-to-r from-rose-500 to-red-600" />
                         <div className="p-6">
                             <div className="mb-4 flex items-start gap-4">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-950/40">
-                                    <AlertTriangle className="h-5 w-5 text-rose-400" />
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400">
+                                    <AlertTriangle className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <h2 className="text-base font-semibold text-neutral-50">
-                                        Delete template?
-                                    </h2>
-                                    <p className="mt-1 text-sm text-neutral-400">
-                                        You're about to permanently delete{' '}
-                                        <span className="font-semibold text-neutral-200">
-                                            {deleteTarget.name}
-                                        </span>
-                                        . This action cannot be undone.
+                                    <h2 className="text-base font-bold text-white">Delete template?</h2>
+                                    <p className="mt-1 text-sm text-slate-400">
+                                        Permanently remove <span className="font-bold text-white">{deleteTarget.name}</span>? Action cannot be undone.
                                     </p>
                                 </div>
                             </div>
                             <div className="flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    disabled={isDeleting}
+                                <EdgeButton
+                                    variant="subtle"
                                     onClick={() => setDeleteTarget(null)}
-                                    className="rounded-xl border border-neutral-700 px-4 py-2 text-sm font-semibold text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors disabled:opacity-50"
+                                    disabled={isDeleting}
                                 >
                                     Cancel
-                                </button>
-                                <button
-                                    type="button"
-                                    disabled={isDeleting}
+                                </EdgeButton>
+                                <EdgeButton
+                                    variant="danger"
                                     onClick={confirmDelete}
-                                    className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-500 transition-colors disabled:opacity-50"
+                                    loading={isDeleting}
                                 >
-                                    {isDeleting ? 'Deleting…' : 'Yes, delete'}
-                                </button>
+                                    Yes, delete
+                                </EdgeButton>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* ── Create / Edit Template Modal ── */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex flex-col bg-black/60 backdrop-blur-sm sm:items-center sm:justify-center sm:p-4 animate-in fade-in duration-200">
-                    <div className="flex flex-col w-full h-full sm:h-auto sm:max-w-2xl sm:max-h-[90vh] sm:rounded-2xl overflow-hidden bg-neutral-900 sm:border sm:border-neutral-700 shadow-2xl">
-                        {/* Header */}
-                        <div className="flex shrink-0 items-center justify-between border-b border-neutral-800 p-5">
-                            <h2 className="text-lg font-bold text-neutral-50">
-                                {editingId ? 'Edit Workout Template' : 'Create New Workout Template'}
-                            </h2>
+                <div className="fixed inset-0 z-50 flex flex-col bg-slate-950/85 backdrop-blur-md sm:items-center sm:justify-center sm:p-4 animate-in fade-in duration-200">
+                    <div className="flex flex-col w-full h-full sm:h-auto sm:max-w-2xl sm:max-h-[90vh] sm:rounded-3xl overflow-hidden bg-slate-900 border border-white/10 shadow-2xl">
+                        <div className="flex shrink-0 items-center justify-between border-b border-white/10 p-5 bg-slate-950/50">
+                            <div className="flex items-center gap-2">
+                                <Dumbbell className="w-5 h-5 text-indigo-400" />
+                                <h2 className="text-lg font-bold text-white">
+                                    {editingId ? 'Edit Workout Template' : 'Create Workout Template'}
+                                </h2>
+                            </div>
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="text-neutral-400 hover:text-neutral-200 transition-colors"
+                                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
                             >
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
 
-                        {/* Scrollable Form Body */}
                         <form
                             id="workout-template-form"
                             onSubmit={submit}
                             className="flex-1 overflow-y-auto p-6 flex flex-col gap-6"
                         >
-                            {/* Template Name & Folder */}
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
-                                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
                                         Template Name
                                     </label>
                                     <input
@@ -505,60 +474,54 @@ return;
                                         required
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        placeholder="e.g. Legs & Back"
-                                        className="h-10 w-full rounded-xl border border-neutral-700 bg-neutral-805 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500"
+                                        placeholder="e.g. Push Hypertrophy A"
+                                        className="h-11 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                                     />
-                                    {errors.name && (
-                                        <span className="mt-1 block text-xs text-rose-500">{errors.name}</span>
-                                    )}
+                                    {errors.name && <span className="mt-1 block text-xs text-rose-400">{errors.name}</span>}
                                 </div>
                                 <div>
-                                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
                                         Folder Name (Optional)
                                     </label>
                                     <input
                                         type="text"
                                         value={data.folderName}
                                         onChange={(e) => setData('folderName', e.target.value)}
-                                        placeholder="e.g. FULLBODY"
-                                        className="h-10 w-full rounded-xl border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500"
+                                        placeholder="e.g. UPPER / LOWER"
+                                        className="h-11 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                                     />
-                                    {errors.folderName && (
-                                        <span className="mt-1 block text-xs text-rose-500">{errors.folderName}</span>
-                                    )}
+                                    {errors.folderName && <span className="mt-1 block text-xs text-rose-400">{errors.folderName}</span>}
                                 </div>
                             </div>
 
-                            {/* Exercises Selection */}
-                            <div className="border-t border-neutral-800 pt-6">
-                                <label className="mb-3 block text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                            <div className="border-t border-white/10 pt-6">
+                                <label className="mb-3 block text-xs font-bold uppercase tracking-wider text-slate-400">
                                     Exercises in Template
                                 </label>
 
                                 {data.exercises.length === 0 ? (
-                                    <p className="rounded-xl border border-dashed border-neutral-800 py-8 text-center text-sm text-neutral-500">
-                                        No exercises added yet. Select an exercise from the list below to add it.
-                                    </p>
+                                    <div className="rounded-2xl border border-dashed border-white/10 py-10 text-center text-sm text-slate-500 bg-slate-950/30">
+                                        No exercises added yet. Select an exercise from the library below.
+                                    </div>
                                 ) : (
                                     <div className="flex flex-col gap-4">
                                         {data.exercises.map((item, exIndex) => (
-                                            <div key={exIndex} className="rounded-xl border border-neutral-800 bg-neutral-850/50 p-4">
-                                                <div className="flex items-center justify-between mb-3 border-b border-neutral-850 pb-2">
-                                                    <span className="text-sm font-bold text-neutral-200">
+                                            <div key={exIndex} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4 space-y-3">
+                                                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                                                    <span className="text-sm font-bold text-white">
                                                         {exIndex + 1}. {item.name}
                                                     </span>
                                                     <button
                                                         type="button"
                                                         onClick={() => removeExercise(exIndex)}
-                                                        className="text-xs font-semibold text-rose-400 hover:text-rose-350 transition-colors"
+                                                        className="text-xs font-semibold text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
                                                     >
                                                         Remove
                                                     </button>
                                                 </div>
 
-                                                {/* Sets configuration */}
                                                 <div className="flex flex-col gap-2">
-                                                    <div className="grid grid-cols-[30px_1.5fr_75px_1.2fr_30px] gap-2 items-center text-left text-[10px] font-bold text-neutral-500 uppercase tracking-wider px-2">
+                                                    <div className="grid grid-cols-[30px_1.5fr_75px_1.2fr_30px] gap-2 items-center text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2">
                                                         <span>Set</span>
                                                         <span>Weight</span>
                                                         <span>Unit</span>
@@ -568,7 +531,7 @@ return;
 
                                                     {item.sets.map((set, setIndex) => (
                                                         <div key={setIndex} className="grid grid-cols-[30px_1.5fr_75px_1.2fr_30px] gap-2 items-center">
-                                                            <span className="text-xs text-neutral-400 text-center font-bold">
+                                                            <span className="text-xs text-slate-400 text-center font-bold">
                                                                 {setIndex + 1}
                                                             </span>
                                                             <input
@@ -578,13 +541,12 @@ return;
                                                                 required
                                                                 value={set.weight}
                                                                 onChange={(e) => updateSet(exIndex, setIndex, 'weight', e.target.value)}
-                                                                placeholder="60"
-                                                                className="h-9 w-full rounded-lg border border-neutral-700 bg-neutral-800 px-2 text-sm text-neutral-200 outline-none focus:border-neutral-500"
+                                                                className="h-9 w-full rounded-lg border border-white/10 bg-slate-900 px-2 text-sm text-white outline-none focus:border-indigo-500"
                                                             />
                                                             <select
                                                                 value={set.unit || 'kg'}
                                                                 onChange={(e) => updateSet(exIndex, setIndex, 'unit', e.target.value)}
-                                                                className="h-9 w-full rounded-lg border border-neutral-700 bg-neutral-800 px-1.5 text-xs text-neutral-200 outline-none focus:border-neutral-500"
+                                                                className="h-9 w-full rounded-lg border border-white/10 bg-slate-900 px-1.5 text-xs text-white outline-none focus:border-indigo-500"
                                                             >
                                                                 <option value="kg">kg</option>
                                                                 <option value="lbs">lbs</option>
@@ -595,14 +557,13 @@ return;
                                                                 required
                                                                 value={set.reps}
                                                                 onChange={(e) => updateSet(exIndex, setIndex, 'reps', e.target.value)}
-                                                                placeholder="10"
-                                                                className="h-9 w-full rounded-lg border border-neutral-700 bg-neutral-800 px-2 text-sm text-neutral-200 outline-none focus:border-neutral-500"
+                                                                className="h-9 w-full rounded-lg border border-white/10 bg-slate-900 px-2 text-sm text-white outline-none focus:border-indigo-500"
                                                             />
                                                             <button
                                                                 type="button"
                                                                 onClick={() => removeSet(exIndex, setIndex)}
                                                                 disabled={item.sets.length <= 1}
-                                                                className="flex items-center justify-center h-8 w-8 text-neutral-500 hover:text-rose-400 disabled:opacity-30 disabled:hover:text-neutral-500 transition-colors"
+                                                                className="flex items-center justify-center h-8 w-8 text-slate-500 hover:text-rose-400 disabled:opacity-30 transition-colors cursor-pointer"
                                                             >
                                                                 <Trash2 className="h-3.5 w-3.5" />
                                                             </button>
@@ -612,7 +573,7 @@ return;
                                                     <button
                                                         type="button"
                                                         onClick={() => addSet(exIndex)}
-                                                        className="mt-1 self-start text-xs font-bold text-sky-400 hover:text-sky-350 transition-colors"
+                                                        className="mt-1 self-start text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
                                                     >
                                                         + Add Set
                                                     </button>
@@ -623,22 +584,19 @@ return;
                                 )}
                             </div>
 
-                            {/* Search and add exercise list */}
-                            <div className="border-t border-neutral-800 pt-6">
-                                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                            <div className="border-t border-white/10 pt-6">
+                                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
                                     Add Exercise from Library
                                 </label>
-                                <div className="relative mb-3">
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Search by name, muscle, or category..."
-                                        className="h-10 w-full rounded-xl border border-neutral-700 bg-neutral-850 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 outline-none focus:border-neutral-550 focus:ring-1 focus:ring-neutral-550"
-                                    />
-                                </div>
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search by exercise name, target muscle..."
+                                    className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-indigo-500 mb-3"
+                                />
 
-                                <div className="max-h-40 overflow-y-auto border border-neutral-800 rounded-xl bg-neutral-950/20 p-2 flex flex-col gap-1">
+                                <div className="max-h-44 overflow-y-auto border border-white/10 rounded-xl bg-slate-950/40 p-2 flex flex-col gap-1">
                                     {filteredExercises.map((ex) => (
                                         <button
                                             key={ex.id}
@@ -647,102 +605,84 @@ return;
                                                 addExercise(ex.id, ex.name);
                                                 setSearchQuery('');
                                             }}
-                                            className="flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-neutral-350 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
+                                            className="flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-slate-300 transition-colors hover:bg-indigo-500/20 hover:text-white cursor-pointer"
                                         >
-                                            <span>{ex.name}</span>
-                                            <span className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider">
+                                            <span className="font-semibold">{ex.name}</span>
+                                            <span className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider">
                                                 {ex.category}
                                             </span>
                                         </button>
                                     ))}
-                                    {filteredExercises.length === 0 && (
-                                        <p className="text-center text-xs text-neutral-500 py-4">
-                                            No exercises match your search
-                                        </p>
-                                    )}
                                 </div>
                             </div>
                         </form>
 
-                        {/* Sticky Footer */}
-                        <div className="shrink-0 flex justify-end gap-3 border-t border-neutral-800 px-6 py-4">
-                            <button
-                                type="button"
+                        <div className="shrink-0 flex justify-end gap-3 border-t border-white/10 px-6 py-4 bg-slate-950/50">
+                            <EdgeButton
+                                variant="subtle"
                                 onClick={() => setIsModalOpen(false)}
-                                className="rounded-xl border border-neutral-700 px-5 py-2 text-sm font-semibold text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors"
                             >
                                 Cancel
-                            </button>
-                            <button
+                            </EdgeButton>
+                            <EdgeButton
+                                variant="gradient"
                                 type="submit"
                                 form="workout-template-form"
-                                disabled={processing}
-                                className="rounded-xl bg-sky-500 px-5 py-2 text-sm font-bold text-white hover:bg-sky-400 disabled:opacity-50 transition-colors"
+                                loading={processing}
                             >
-                                {processing ? 'Saving...' : 'Save Template'}
-                            </button>
+                                Save Template
+                            </EdgeButton>
                         </div>
                     </div>
                 </div>
             )}
 
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 md:p-8">
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 md:p-8 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] md:pb-12">
+                <EdgeHeader
+                    title="Workout Studio"
+                    subtitle="Plan your workouts, configure smart templates, and execute training routines."
+                    icon={<Dumbbell className="h-7 w-7 text-indigo-400" />}
+                />
 
-                {/* ── Page header ── */}
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
-                        Workout
-                    </h1>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                        Plan your sessions, manage templates, and track your training.
-                    </p>
-                </div>
+                <EdgeCard variant="neon" elevation="lg" glow className="p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                            <h2 className="text-lg font-extrabold text-white flex items-center gap-2">
+                                <span>Quick Workout Session</span>
+                                <EdgeBadge text="INSTANT" variant="neon" />
+                            </h2>
+                            <p className="text-xs text-slate-300">
+                                Launch an empty workout immediately without a pre-configured template.
+                            </p>
+                        </div>
+                        <EdgeButton
+                            variant="gradient"
+                            glow
+                            icon={<Zap className="h-4 w-4" />}
+                            onClick={() => startWorkout(null)}
+                            className="w-full sm:w-auto px-8 py-3"
+                        >
+                            Start Empty Workout
+                        </EdgeButton>
+                    </div>
+                </EdgeCard>
 
-                {/* ── Quick Start ── */}
-                <div className="flex flex-col gap-3">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
-                        Quick start
-                    </p>
-                    <button
-                        onClick={() => startWorkout(null)}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 py-3.5 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-sky-500/20 transition-all duration-200 hover:bg-sky-400 active:scale-[0.99] sm:w-auto sm:px-10 sm:self-start"
-                    >
-                        <Zap className="h-4 w-4" />
-                        Start an empty workout
-                    </button>
-                </div>
-
-                {/* ── Divider ── */}
-                <div className="h-px bg-neutral-200 dark:bg-neutral-800" />
-
-                {/* ── Two-column desktop layout ── */}
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-[320px_1fr]">
 
-                    {/* LEFT — Templates sidebar */}
                     <aside className="flex flex-col gap-4">
-                        {/* Section header */}
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-50">
-                                Templates
+                        <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                            <h2 className="text-base font-extrabold text-white">
+                                Folder Directives
                             </h2>
-                            <div className="flex items-center gap-0.5">
-                                <button
-                                    onClick={handleCreate}
-                                    className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                </button>
-                                <button className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200">
-                                    <FolderOpen className="h-4 w-4" />
-                                </button>
-                                <button className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </button>
-                            </div>
+                            <button
+                                onClick={handleCreate}
+                                className="p-1.5 rounded-lg text-indigo-400 hover:bg-indigo-500/20 transition-colors cursor-pointer"
+                            >
+                                <Plus className="h-4 w-4" />
+                            </button>
                         </div>
 
-                        {/* Folder list */}
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-3">
                             {folders.map((folder) => (
                                 <FolderRow
                                     key={folder.id}
@@ -757,62 +697,59 @@ return;
                                 />
                             ))}
                             {folders.length === 0 && (
-                                <p className="rounded-xl border border-dashed border-neutral-700 py-8 text-center text-sm text-neutral-500">
-                                    No folders yet
-                                </p>
+                                <div className="rounded-2xl border border-dashed border-white/10 py-8 text-center text-xs text-slate-500">
+                                    No folder categories defined
+                                </div>
                             )}
                         </div>
                     </aside>
 
-                    {/* RIGHT — My Templates + Example Templates */}
-                    <div className="flex flex-col gap-10">
-
-                        {/* My Templates */}
-                        <section className="flex flex-col gap-4">
-                            <div className="flex items-center justify-between border-b border-neutral-200 pb-3 dark:border-neutral-800">
-                                <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-50">
-                                    My Templates{' '}
-                                    <span className="ml-1 font-normal text-neutral-400">
-                                        ({myTemplates.length})
-                                    </span>
+                    <div className="flex flex-col gap-6">
+                        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-lg font-black text-white">
+                                    My Workout Templates
                                 </h2>
-                                <button
-                                    onClick={handleCreate}
-                                    className="flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800"
-                                >
-                                    <Plus className="h-3.5 w-3.5" />
-                                    New template
-                                </button>
+                                <EdgeBadge text={`${myTemplates.length}`} variant="accent" />
                             </div>
+                            <EdgeButton
+                                variant="subtle"
+                                icon={<Plus className="h-3.5 w-3.5" />}
+                                onClick={handleCreate}
+                            >
+                                New Template
+                            </EdgeButton>
+                        </div>
 
-                            {myTemplates.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-700 bg-neutral-900/30 py-16 text-center">
-                                    <Dumbbell className="mb-3 h-8 w-8 text-neutral-600" />
-                                    <p className="text-sm text-neutral-500">
-                                        No templates yet —{' '}
-                                        <span onClick={handleCreate} className="text-sky-400 cursor-pointer hover:underline">
-                                            create one
-                                        </span>
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                                    {myTemplates.map((t) => (
-                                        <TemplateCard
-                                            key={t.id}
-                                            template={t}
-                                            activeMenu={activeMenu}
-                                            setActiveMenu={setActiveMenu}
-                                            onEdit={() => handleEdit(t)}
-                                            onDelete={() => handleDelete(t)}
-                                            onClick={() => handleStartTemplate(t)}
-                                            menuKey={`my-templates-${t.id}`}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </section>
-
+                        {myTemplates.length === 0 ? (
+                            <EdgeCard variant="glass" className="py-12 text-center flex flex-col items-center">
+                                <p className="text-sm font-semibold text-slate-400">
+                                    No templates created yet
+                                </p>
+                                <EdgeButton
+                                    variant="gradient"
+                                    className="mt-4"
+                                    onClick={handleCreate}
+                                >
+                                    Create Your First Template
+                                </EdgeButton>
+                            </EdgeCard>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                                {myTemplates.map((t) => (
+                                    <TemplateCard
+                                        key={t.id}
+                                        template={t}
+                                        activeMenu={activeMenu}
+                                        setActiveMenu={setActiveMenu}
+                                        onEdit={() => handleEdit(t)}
+                                        onDelete={() => handleDelete(t)}
+                                        onClick={() => handleStartTemplate(t)}
+                                        menuKey={`my-templates-${t.id}`}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

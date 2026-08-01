@@ -11,7 +11,7 @@ export default function AuthSimpleLayout({
     return (
         <div
             style={{ fontFamily: "'Inter', sans-serif" }}
-            className="relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10 overflow-hidden"
+            className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden p-6 md:p-10"
             // Dark background matching the landing page
             // bg-[#080810] applied via inline style since it's outside Tailwind theme
         >
@@ -61,12 +61,11 @@ export default function AuthSimpleLayout({
             {/* ── Content ── */}
             <div className="relative z-10 w-full max-w-sm">
                 <div className="flex flex-col gap-8">
-
                     {/* Logo */}
                     <div className="flex flex-col items-center gap-4">
                         <Link
                             href={home()}
-                            className="flex flex-col items-center gap-3 font-medium group"
+                            className="group flex flex-col items-center gap-3 font-medium"
                         >
                             <div
                                 className="flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105"
@@ -92,7 +91,10 @@ export default function AuthSimpleLayout({
                             <h1 className="text-xl font-semibold text-white">
                                 {title}
                             </h1>
-                            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                            <p
+                                className="text-sm"
+                                style={{ color: 'rgba(255,255,255,0.45)' }}
+                            >
                                 {description}
                             </p>
                         </div>

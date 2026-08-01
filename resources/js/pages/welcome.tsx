@@ -1,6 +1,8 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { dashboard, login, register } from '@/routes';
+import { EdgeBadge, EdgeButton, EdgeCard, EdgeGrid } from '@/lib/edge/engine';
+import { Dumbbell, Activity, Trophy, Zap, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function Welcome({
     canRegister = true,
@@ -9,100 +11,79 @@ export default function Welcome({
 }) {
     const { auth } = usePage().props;
     const [scrolled, setScrolled] = useState(false);
-    const heroRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener('scroll', handleScroll);
-
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     const features = [
         {
-            icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M6 5v14M18 5v14M6 12h12M3 8h3M18 8h3M3 16h3M18 16h3" />
-                </svg>
-            ),
-            title: 'Smart Workouts',
-            desc: 'Log every set, rep, and weight with effortless precision. Your sessions, structured.',
+            icon: <Dumbbell className="w-6 h-6 text-indigo-400" />,
+            title: 'Smart Workout Studio',
+            desc: 'Log every set, weight, rep, and rest timer with real-time feedback and EDGE reactive engine.',
         },
         {
-            icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                </svg>
-            ),
-            title: 'Progress Tracking',
-            desc: 'See your growth over time with beautiful charts. Every PR celebrated, every plateau spotted.',
+            icon: <Activity className="w-6 h-6 text-purple-400" />,
+            title: 'Analytics & Insights',
+            desc: 'Continuous performance scoring, volume trends, and week-over-week AI progressive overload analysis.',
         },
         {
-            icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 6v6l4 2" />
-                </svg>
-            ),
-            title: 'Exercise Library',
-            desc: 'Hundreds of exercises at your fingertips. Build custom routines that fit your goals.',
+            icon: <Trophy className="w-6 h-6 text-rose-400" />,
+            title: 'PR & Record Engine',
+            desc: 'Automatic record tracking for strength milestones. Celebrate personal bests across all exercises.',
         },
     ];
 
     const stats = [
         { value: '10k+', label: 'Workouts Logged' },
-        { value: '500+', label: 'Exercises' },
+        { value: '500+', label: 'Exercises Cataloged' },
         { value: '98%', label: 'User Satisfaction' },
-        { value: '∞', label: 'Potential' },
+        { value: '∞', label: 'Potential Unlocked' },
     ];
 
     return (
         <>
             <Head>
-                <title>Ascend — Elevate Your Training</title>
-                <meta name="description" content="Ascend is the minimalist fitness tracking app that helps you log workouts, track progress, and reach new personal records." />
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+                <title>Ascend — Elevate Your Training with EDGE Engine</title>
+                <meta name="description" content="Ascend is the next-generation minimalist workout tracker powered by EDGE Element Definition and Generation Engine." />
             </Head>
 
-            <div style={{ fontFamily: "'Inter', sans-serif" }} className="min-h-screen bg-[#080810] text-white overflow-x-hidden">
+            <div className="min-h-screen bg-[#090D16] text-white overflow-x-hidden relative font-sans">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-indigo-600/20 via-purple-600/10 to-transparent blur-[120px] pointer-events-none" />
+                <div className="absolute top-[40%] right-[-10%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
 
-                {/* ── NAV ── */}
                 <nav
-                    className={`fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-500 ${scrolled ? 'bg-[#080810]/90 backdrop-blur-md border-b border-white/5' : ''}`}
+                    className={`fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-500 ${
+                        scrolled ? 'bg-slate-950/85 backdrop-blur-xl border-b border-white/10 shadow-2xl' : ''
+                    }`}
                 >
                     <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold tracking-tight">
-                            <span className="text-white">asc</span><span className="text-[#818cf8]">end</span>
+                        <span className="text-2xl font-black tracking-tight flex items-center gap-2">
+                            <Zap className="w-6 h-6 text-indigo-400 fill-indigo-400" />
+                            <span className="text-white">asc</span>
+                            <span className="text-indigo-400">end</span>
                         </span>
                     </div>
 
                     <div className="flex items-center gap-3">
                         {auth.user ? (
-                            <Link
-                                href={dashboard()}
-                                id="nav-dashboard"
-                                className="px-4 py-2 rounded-lg bg-[#818cf8] text-white text-sm font-medium hover:bg-[#6366f1] transition-colors duration-200"
-                            >
-                                Dashboard →
+                            <Link href="/dashboard" id="nav-dashboard">
+                                <EdgeButton variant="gradient" glow icon={<ArrowRight className="w-4 h-4" />}>
+                                    Dashboard
+                                </EdgeButton>
                             </Link>
                         ) : (
                             <>
-                                <Link
-                                    href={login()}
-                                    id="nav-login"
-                                    className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white transition-colors duration-200"
-                                >
-                                    Log in
+                                <Link href={login()} id="nav-login">
+                                    <EdgeButton variant="ghost">Sign in</EdgeButton>
                                 </Link>
                                 {canRegister && (
-                                    <Link
-                                        href={register()}
-                                        id="nav-register"
-                                        className="px-4 py-2 rounded-lg bg-[#818cf8] text-white text-sm font-medium hover:bg-[#6366f1] transition-colors duration-200"
-                                    >
-                                        Get started
+                                    <Link href={register()} id="nav-register">
+                                        <EdgeButton variant="gradient" glow>
+                                            Get Started
+                                        </EdgeButton>
                                     </Link>
                                 )}
                             </>
@@ -110,223 +91,88 @@ export default function Welcome({
                     </div>
                 </nav>
 
-                {/* ── HERO ── */}
-                <section ref={heroRef} className="relative flex flex-col items-center justify-center min-h-screen px-6 pt-24 pb-16 text-center overflow-hidden">
-                    {/* Background glow */}
-                    <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-                        <div
-                            style={{
-                                position: 'absolute',
-                                top: '20%',
-                                left: '50%',
-                                transform: 'translateX(-50%)',
-                                width: '600px',
-                                height: '400px',
-                                background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.18) 0%, transparent 70%)',
-                                filter: 'blur(40px)',
-                            }}
-                        />
-                        <div
-                            style={{
-                                position: 'absolute',
-                                bottom: '10%',
-                                right: '10%',
-                                width: '300px',
-                                height: '300px',
-                                background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.12) 0%, transparent 70%)',
-                                filter: 'blur(60px)',
-                            }}
-                        />
-                        {/* Grid lines */}
-                        <div
-                            style={{
-                                position: 'absolute',
-                                inset: 0,
-                                backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)',
-                                backgroundSize: '80px 80px',
-                                maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
-                            }}
-                        />
-                    </div>
-
-                    {/* Badge */}
-                    <div className="relative mb-8 inline-flex items-center gap-2 rounded-full border border-[#818cf8]/30 bg-[#818cf8]/10 px-4 py-1.5">
-                        <span className="size-1.5 rounded-full bg-[#818cf8] animate-pulse" />
-                        <span className="text-xs font-medium text-[#818cf8] tracking-wide uppercase">Your training, elevated</span>
-                    </div>
-
-                    {/* Headline */}
-                    <h1 className="relative max-w-3xl text-5xl sm:text-6xl md:text-7xl font-bold leading-[1.05] tracking-tight">
-                        Train with{' '}
-                        <span
-                            style={{
-                                background: 'linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #e879f9 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text',
-                            }}
-                        >
-                            purpose.
-                        </span>
+                <section className="relative pt-36 pb-24 px-6 max-w-6xl mx-auto text-center flex flex-col items-center">
+                    <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white leading-none max-w-4xl">
+                        Train with <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">purpose.</span>
                         <br />
                         Ascend further.
                     </h1>
 
-                    {/* Subheadline */}
-                    <p className="relative mt-6 max-w-xl text-base sm:text-lg text-white/50 leading-relaxed">
-                        The minimalist workout tracker built for lifters who care about progress.
-                        Log smarter, lift heavier, rise higher.
+                    <p className="mt-6 text-base sm:text-xl text-slate-400 max-w-2xl leading-relaxed font-normal">
+                        The minimalist, high-performance workout tracker built for lifters who demand progress. Log smarter, lift heavier, and conquer plateaus.
                     </p>
 
-                    {/* CTA buttons */}
-                    <div className="relative mt-10 flex flex-col sm:flex-row gap-3 items-center">
+                    <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md">
                         {auth.user ? (
-                            <Link
-                                href={dashboard()}
-                                id="hero-dashboard-cta"
-                                className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-white text-sm transition-all duration-300"
-                                style={{
-                                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                                    boxShadow: '0 0 30px rgba(99,102,241,0.4)',
-                                }}
-                            >
-                                Open Dashboard
-                                <svg className="group-hover:translate-x-1 transition-transform" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                            <Link href="/dashboard" className="w-full sm:w-auto">
+                                <EdgeButton variant="gradient" elevation="glow" glow icon={<Zap className="w-5 h-5" />} className="w-full sm:w-auto px-8 py-3.5 text-base">
+                                    Open Dashboard
+                                </EdgeButton>
                             </Link>
                         ) : (
                             <>
                                 {canRegister && (
-                                    <Link
-                                        href={register()}
-                                        id="hero-register-cta"
-                                        className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-white text-sm transition-all duration-300 hover:scale-[1.02]"
-                                        style={{
-                                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                                            boxShadow: '0 0 30px rgba(99,102,241,0.35)',
-                                        }}
-                                    >
-                                        Start for free
-                                        <svg className="group-hover:translate-x-1 transition-transform" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                                    <Link href={register()} className="w-full sm:w-auto">
+                                        <EdgeButton variant="gradient" elevation="glow" glow icon={<ArrowRight className="w-5 h-5" />} className="w-full sm:w-auto px-8 py-3.5 text-base">
+                                            Start for free
+                                        </EdgeButton>
                                     </Link>
                                 )}
-                                <Link
-                                    href={login()}
-                                    id="hero-login-cta"
-                                    className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-medium text-white/60 text-sm border border-white/10 hover:border-white/20 hover:text-white/80 transition-all duration-200"
-                                >
-                                    Sign in
+                                <Link href={login()} className="w-full sm:w-auto">
+                                    <EdgeButton variant="glass" className="w-full sm:w-auto px-8 py-3.5 text-base">
+                                        Sign in
+                                    </EdgeButton>
                                 </Link>
                             </>
                         )}
                     </div>
 
-                    {/* Stats row */}
-                    <div className="relative mt-20 grid grid-cols-2 sm:grid-cols-4 gap-8 sm:gap-16">
-                        {stats.map((stat) => (
-                            <div key={stat.label} className="flex flex-col items-center gap-1">
-                                <span className="text-3xl font-bold text-white">{stat.value}</span>
-                                <span className="text-xs text-white/40 tracking-wide uppercase">{stat.label}</span>
-                            </div>
-                        ))}
+                    <div className="mt-20 w-full max-w-4xl">
+                        <EdgeGrid columns={4} gap="md">
+                            {stats.map((s, idx) => (
+                                <EdgeCard key={idx} variant="glass" elevation="md" className="py-6 text-center">
+                                    <p className="text-3xl sm:text-4xl font-black text-indigo-400 tracking-tight">{s.value}</p>
+                                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">{s.label}</p>
+                                </EdgeCard>
+                            ))}
+                        </EdgeGrid>
                     </div>
                 </section>
 
-                {/* ── FEATURES ── */}
-                <section className="relative px-6 py-24 max-w-5xl mx-auto">
-                    <div className="mb-16 text-center">
-                        <p className="text-xs font-semibold uppercase tracking-widest text-[#818cf8] mb-3">Everything you need</p>
-                        <h2 className="text-3xl sm:text-4xl font-bold text-white">Built for the serious lifter.</h2>
-                        <p className="mt-4 text-white/50 max-w-lg mx-auto">No bloat. No distractions. Just the tools that move the needle on your training.</p>
+                <section className="py-20 px-6 max-w-6xl mx-auto border-t border-white/5">
+                    <div className="text-center max-w-2xl mx-auto mb-14">
+                        <EdgeBadge text="FEATURES" variant="accent" className="mb-3" />
+                        <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                            Engineered for peak performance
+                        </h2>
+                        <p className="text-slate-400 mt-2 text-sm">
+                            Everything you need to plan, track, and elevate your fitness journey.
+                        </p>
                     </div>
 
-                    <div className="grid sm:grid-cols-3 gap-5">
+                    <EdgeGrid columns={3} gap="lg">
                         {features.map((f, i) => (
-                            <div
+                            <EdgeCard
                                 key={i}
-                                id={`feature-${i}`}
-                                className="group relative rounded-2xl p-6 border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300 hover:border-[#818cf8]/20"
+                                variant="glass"
+                                elevation="lg"
+                                glow
+                                icon={f.icon}
+                                title={f.title}
+                                className="text-left"
                             >
-                                <div
-                                    className="mb-4 inline-flex p-2.5 rounded-xl text-[#818cf8]"
-                                    style={{ background: 'rgba(129,140,248,0.1)' }}
-                                >
-                                    {f.icon}
-                                </div>
-                                <h3 className="text-base font-semibold text-white mb-2">{f.title}</h3>
-                                <p className="text-sm text-white/50 leading-relaxed">{f.desc}</p>
-                            </div>
+                                <p className="text-sm text-slate-400 leading-relaxed mt-2">{f.desc}</p>
+                            </EdgeCard>
                         ))}
-                    </div>
+                    </EdgeGrid>
                 </section>
 
-                {/* ── CTA BANNER ── */}
-                <section className="px-6 py-24">
-                    <div
-                        className="max-w-2xl mx-auto rounded-3xl p-px"
-                        style={{
-                            background: 'linear-gradient(135deg, rgba(99,102,241,0.4), rgba(139,92,246,0.2), rgba(99,102,241,0.1))',
-                        }}
-                    >
-                        <div
-                            className="rounded-3xl px-10 py-14 text-center"
-                            style={{ background: '#0d0d1a' }}
-                        >
-                            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                                Ready to ascend?
-                            </h2>
-                            <p className="text-white/50 mb-8 text-sm leading-relaxed max-w-sm mx-auto">
-                                Join thousands of lifters tracking their journey and reaching new heights every session.
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                                {auth.user ? (
-                                    <Link
-                                        href={dashboard()}
-                                        id="cta-dashboard"
-                                        className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-white text-sm transition-all duration-300 hover:scale-[1.02]"
-                                        style={{
-                                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                                            boxShadow: '0 0 30px rgba(99,102,241,0.4)',
-                                        }}
-                                    >
-                                        Go to Dashboard →
-                                    </Link>
-                                ) : (
-                                    <>
-                                        {canRegister && (
-                                            <Link
-                                                href={register()}
-                                                id="cta-register"
-                                                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-white text-sm transition-all duration-300 hover:scale-[1.02]"
-                                                style={{
-                                                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                                                    boxShadow: '0 0 30px rgba(99,102,241,0.4)',
-                                                }}
-                                            >
-                                                Create free account
-                                            </Link>
-                                        )}
-                                        <Link
-                                            href={login()}
-                                            id="cta-login"
-                                            className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl font-medium text-white/60 text-sm border border-white/10 hover:border-white/20 hover:text-white/80 transition-all duration-200"
-                                        >
-                                            I have an account
-                                        </Link>
-                                    </>
-                                )}
-                            </div>
-                        </div>
+                <footer className="py-12 border-t border-white/10 text-center text-xs text-slate-500">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                        <Sparkles className="w-4 h-4 text-indigo-400" />
+                        <span className="font-bold text-slate-300">Ascend EDGE UI Framework</span>
                     </div>
-                </section>
-
-                {/* ── FOOTER ── */}
-                <footer className="border-t border-white/[0.04] px-6 py-8">
-                    <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <span className="text-sm font-semibold">
-                            <span className="text-white">asc</span><span className="text-[#818cf8]">end</span>
-                        </span>
-                        <p className="text-xs text-white/30">© {new Date().getFullYear()} Ascend. All rights reserved.</p>
-                    </div>
+                    <p>© 2026 Ascend Fitness. Built with NativePHP & Inertia.js.</p>
                 </footer>
             </div>
         </>

@@ -30,4 +30,9 @@ export default defineConfig({
             formVariants: true,
         }),
     ],
+    build: {
+        target: 'esnext',
+        chunkSizeWarningLimit: 1000,
+        cssCodeSplit: true,
+    },
 });

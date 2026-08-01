@@ -66,9 +66,11 @@ function RestTimerModal({
         const mins = Math.floor((totalSeconds % 3600) / 60);
         const secs = totalSeconds % 60;
         const pad = (num: number) => String(num).padStart(2, '0');
+
         if (hrs > 0) {
             return `${hrs}:${pad(mins)}:${pad(secs)}`;
         }
+
         return `${pad(mins)}:${pad(secs)}`;
     };
 
@@ -338,7 +340,7 @@ return null;
         return (
             <div 
                 onClick={() => setIsExpanded(true)}
-                className="fixed bottom-[72px] left-4 right-4 z-40 flex cursor-pointer items-center justify-between rounded-2xl border border-neutral-850 bg-neutral-900/95 p-3.5 shadow-2xl backdrop-blur-md transition-all duration-300 hover:border-neutral-750 hover:bg-neutral-850/95 active:scale-[0.99] md:bottom-4 md:right-4 md:left-auto md:w-96"
+                className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 z-40 flex cursor-pointer items-center justify-between rounded-2xl border border-neutral-850 bg-neutral-900/95 p-3.5 shadow-2xl backdrop-blur-md transition-all duration-300 hover:border-neutral-750 hover:bg-neutral-850/95 active:scale-[0.99] md:bottom-4 md:right-4 md:left-auto md:w-96"
             >
                 <div className="flex items-center gap-3">
                     <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400">

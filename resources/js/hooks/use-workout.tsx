@@ -156,6 +156,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     const [activeRest, setActiveRest] = useState<{ exerciseIndex: number; setIndex: number; remaining: number; total: number; isPaused?: boolean } | null>(() => {
         if (initialWorkout?.activeRest) {
             const savedRest = initialWorkout.activeRest;
+
             if (savedRest.isPaused) {
                 return {
                     exerciseIndex: savedRest.exerciseIndex,
@@ -165,6 +166,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
                     isPaused: true,
                 };
             }
+
             const elapsed = Math.floor((Date.now() - savedRest.timestamp) / 1000);
             const remaining = savedRest.remaining - elapsed;
 
