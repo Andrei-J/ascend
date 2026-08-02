@@ -53,6 +53,7 @@ export interface EdgeButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEl
     icon?: React.ReactNode;
     loading?: boolean;
     glow?: boolean;
+    as?: React.ElementType;
     children: React.ReactNode;
 }
 
@@ -62,14 +63,15 @@ export const EdgeButton = memo(function EdgeButton({
     icon,
     loading = false,
     glow = false,
+    as: Component = 'button',
     className,
     children,
     disabled,
     ...props
 }: EdgeButtonProps) {
     return (
-        <button
-            disabled={disabled || loading}
+        <Component
+            disabled={Component === 'button' ? disabled || loading : undefined}
             className={cn(
                 'inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer',
                 getVariantClasses(variant),
@@ -77,7 +79,7 @@ export const EdgeButton = memo(function EdgeButton({
                 glow && 'shadow-[0_0_20px_rgba(99,102,241,0.4)]',
                 className
             )}
-            {...props}
+            {...(props as any)}
         >
             {loading ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -85,7 +87,7 @@ export const EdgeButton = memo(function EdgeButton({
                 icon && <span className="w-4 h-4 flex items-center justify-center">{icon}</span>
             )}
             <span>{children}</span>
-        </button>
+        </Component>
     );
 });
 

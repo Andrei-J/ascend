@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
+use Throwable;
 use Illuminate\Http\Request;
 use App\Services\AnalyticsService;
+use Illuminate\Support\Facades\Log;
 
 class AnalyticsController extends Controller
 {
@@ -23,8 +24,10 @@ class AnalyticsController extends Controller
         try {
             $data = $this->analyticsService->getWeeklyAnalytics(auth()->id());
             return inertia('analyticsPage/index', $data);
-        } catch (Exception $e) {
-            abort(500, $e->getMessage());
+        } catch (Throwable $e) {
+            Log::error('AnalyticsController@index error: ' . $e->getMessage());
+            $data = $this->analyticsService->getWeeklyAnalytics(null);
+            return inertia('analyticsPage/index', $data);
         }
     }
 
@@ -36,8 +39,10 @@ class AnalyticsController extends Controller
         try {
             $data = $this->analyticsService->getWeeklyAnalytics(auth()->id());
             return inertia('dashboard', $data);
-        } catch (Exception $e) {
-            abort(500, $e->getMessage());
+        } catch (Throwable $e) {
+            Log::error('AnalyticsController@dashboard error: ' . $e->getMessage());
+            $data = $this->analyticsService->getWeeklyAnalytics(null);
+            return inertia('dashboard', $data);
         }
     }
 }

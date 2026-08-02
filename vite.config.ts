@@ -9,6 +9,7 @@ import { nativephpMobile, nativephpHotFile } from './vendor/nativephp/mobile/res
  
 export default defineConfig({
     plugins: [
+        nativephpMobile(),
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
             refresh: true,

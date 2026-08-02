@@ -19,9 +19,50 @@ class AnalyticsService
     /**
      * Main entry point: returns the full analytics payload for the frontend.
      */
-    public function getWeeklyAnalytics(int $userId): array
+    public function getWeeklyAnalytics(?int $userId): array
     {
         try {
+            if (!$userId) {
+                return [
+                    'currentWeek'       => [
+                        'label'       => 'Week of ' . Carbon::now()->startOfWeek(Carbon::MONDAY)->format('M j'),
+                        'score'       => 0,
+                        'workouts'    => 0,
+                        'exercises'   => 0,
+                        'totalSets'   => 0,
+                        'totalReps'   => 0,
+                        'totalVolume' => 0.0,
+                        'prCount'     => 0,
+                    ],
+                    'previousWeek'      => [
+                        'label'       => 'Week of ' . Carbon::now()->startOfWeek(Carbon::MONDAY)->subWeek()->format('M j'),
+                        'score'       => 0,
+                        'workouts'    => 0,
+                        'exercises'   => 0,
+                        'totalSets'   => 0,
+                        'totalReps'   => 0,
+                        'totalVolume' => 0.0,
+                        'prCount'     => 0,
+                    ],
+                    'comparison'        => [
+                        'progressPct'   => 0.0,
+                        'volumeDiff'    => 0.0,
+                        'avgWeightDiff' => 0.0,
+                        'avgRepsDiff'   => 0.0,
+                        'frequencyDiff' => 0,
+                        'improved'      => 0,
+                        'maintained'    => 0,
+                        'declined'      => 0,
+                        'status'        => 'maintained',
+                    ],
+                    'exerciseBreakdown' => [],
+                    'weeklyGraph'       => [],
+                    'newExercises'      => [],
+                    'hasData'           => false,
+                    'hasTwoWeeks'       => false,
+                ];
+            }
+
             // ── 1. Determine week boundaries ─────────────────────────────────
             $now         = Carbon::now();
             $currStart   = $now->copy()->startOfWeek(Carbon::MONDAY);

@@ -55,9 +55,8 @@ export default function Welcome({
                 <div className="absolute top-[40%] right-[-10%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
 
                 <nav
-                    className={`fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-500 ${
-                        scrolled ? 'bg-slate-950/85 backdrop-blur-xl border-b border-white/10 shadow-2xl' : ''
-                    }`}
+                    className={`fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-500 ${scrolled ? 'bg-slate-950/85 backdrop-blur-xl border-b border-white/10 shadow-2xl' : ''
+                        }`}
                 >
                     <div className="flex items-center gap-2">
                         <span className="text-2xl font-black tracking-tight flex items-center gap-2">
@@ -70,18 +69,18 @@ export default function Welcome({
                     <div className="flex items-center gap-3">
                         {auth.user ? (
                             <Link href="/dashboard" id="nav-dashboard">
-                                <EdgeButton variant="gradient" glow icon={<ArrowRight className="w-4 h-4" />}>
+                                <EdgeButton as="span" variant="gradient" glow icon={<ArrowRight className="w-4 h-4" />}>
                                     Dashboard
                                 </EdgeButton>
                             </Link>
                         ) : (
                             <>
                                 <Link href={login()} id="nav-login">
-                                    <EdgeButton variant="ghost">Sign in</EdgeButton>
+                                    <EdgeButton as="span" variant="ghost">Sign in</EdgeButton>
                                 </Link>
                                 {canRegister && (
                                     <Link href={register()} id="nav-register">
-                                        <EdgeButton variant="gradient" glow>
+                                        <EdgeButton as="span" variant="gradient" glow>
                                             Get Started
                                         </EdgeButton>
                                     </Link>
@@ -105,7 +104,7 @@ export default function Welcome({
                     <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md">
                         {auth.user ? (
                             <Link href="/dashboard" className="w-full sm:w-auto">
-                                <EdgeButton variant="gradient" elevation="glow" glow icon={<Zap className="w-5 h-5" />} className="w-full sm:w-auto px-8 py-3.5 text-base">
+                                <EdgeButton as="span" variant="gradient" elevation="glow" glow icon={<Zap className="w-5 h-5" />} className="w-full sm:w-auto px-8 py-3.5 text-base">
                                     Open Dashboard
                                 </EdgeButton>
                             </Link>
@@ -113,13 +112,13 @@ export default function Welcome({
                             <>
                                 {canRegister && (
                                     <Link href={register()} className="w-full sm:w-auto">
-                                        <EdgeButton variant="gradient" elevation="glow" glow icon={<ArrowRight className="w-5 h-5" />} className="w-full sm:w-auto px-8 py-3.5 text-base">
+                                        <EdgeButton as="span" variant="gradient" elevation="glow" glow icon={<ArrowRight className="w-5 h-5" />} className="w-full sm:w-auto px-8 py-3.5 text-base">
                                             Start for free
                                         </EdgeButton>
                                     </Link>
                                 )}
                                 <Link href={login()} className="w-full sm:w-auto">
-                                    <EdgeButton variant="glass" className="w-full sm:w-auto px-8 py-3.5 text-base">
+                                    <EdgeButton as="span" variant="glass" className="w-full sm:w-auto px-8 py-3.5 text-base">
                                         Sign in
                                     </EdgeButton>
                                 </Link>
