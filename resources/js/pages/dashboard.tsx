@@ -1,5 +1,4 @@
 import { Head } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
 import {
     BarChart2,
     ChevronDown,
@@ -14,7 +13,9 @@ import {
     ArrowDownRight,
     Minus,
 } from 'lucide-react';
-import { dashboard } from '@/routes';
+import { useMemo, useState } from 'react';
+import type { ContributionCalendarData } from '@/components/github-contribution-calendar';
+import GitHubContributionCalendar from '@/components/github-contribution-calendar';
 import {
     EdgeHeader,
     EdgeStat,
@@ -22,7 +23,6 @@ import {
     EdgeGrid,
     EdgeBadge,
 } from '@/lib/edge/engine';
-import GitHubContributionCalendar, { ContributionCalendarData } from '@/components/github-contribution-calendar';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -65,18 +65,11 @@ interface ExerciseBreakdownRow {
     status: 'improved' | 'maintained' | 'declined';
 }
 
-interface WeeklyGraphPoint {
-    weekKey: string;
-    label: string;
-    score: number;
-}
-
 interface DashboardProps {
     currentWeek?: WeekData;
     previousWeek?: WeekData;
     comparison?: ComparisonData;
     exerciseBreakdown?: ExerciseBreakdownRow[];
-    weeklyGraph?: WeeklyGraphPoint[];
     contributionCalendar?: ContributionCalendarData;
     newExercises?: string[];
     hasData?: boolean;
@@ -85,21 +78,27 @@ interface DashboardProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-type TimeWindow = '4w' | '8w' | '12w' | 'all';
-const WINDOWS: Record<TimeWindow, number> = { '4w': 4, '8w': 8, '12w': 12, 'all': Infinity };
-
 function fmt(n: number, decimals = 1): string {
     return n.toFixed(decimals);
 }
 
 function fmtVol(v: number): string {
-    if (Math.abs(v) >= 1000) return `${(v / 1000).toFixed(1)}k`;
+    if (Math.abs(v) >= 1000) {
+return `${(v / 1000).toFixed(1)}k`;
+}
+
     return v.toFixed(0);
 }
 
 function diffColor(diff: number): string {
-    if (diff > 0) return 'text-emerald-400';
-    if (diff < 0) return 'text-rose-400';
+    if (diff > 0) {
+return 'text-emerald-400';
+}
+
+    if (diff < 0) {
+return 'text-rose-400';
+}
+
     return 'text-amber-400';
 }
 
@@ -109,6 +108,7 @@ function statusConfig(status?: 'improved' | 'maintained' | 'declined') {
         maintained: { emoji: '🟡', label: 'Maintained', color: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/20' },
         declined:   { emoji: '🔴', label: 'Declined',   color: 'text-rose-400',    bg: 'bg-rose-500/10 border-rose-500/20' },
     };
+
     return (status && configs[status]) ? configs[status] : configs.maintained;
 }
 
@@ -179,18 +179,6 @@ function generateInsights(
         .map(r => r.message(comparison, breakdown));
 }
 
-function ChartTooltip({ active, payload, label }: any) {
-    if (!active || !payload?.length) return null;
-    const score = payload[0]?.value as number;
-    return (
-        <div className="rounded-2xl border border-indigo-500/30 bg-slate-900/90 backdrop-blur-md px-4 py-3 shadow-2xl">
-            <p className="text-xs font-bold text-slate-400 mb-0.5">{label}</p>
-            <p className="text-2xl font-black text-indigo-400 tracking-tight">{score.toFixed(1)}</p>
-            <p className="text-[10px] text-slate-500">EDGE Weekly Performance Score</p>
-        </div>
-    );
-}
-
 const DEFAULT_WEEK: WeekData = {
     label: '',
     score: 0,
@@ -219,7 +207,6 @@ export default function Dashboard({
     previousWeek,
     comparison,
     exerciseBreakdown,
-    weeklyGraph,
     contributionCalendar,
     newExercises,
     hasData = false,
@@ -228,8 +215,7 @@ export default function Dashboard({
     const cWeek = currentWeek ?? DEFAULT_WEEK;
     const pWeek = previousWeek ?? DEFAULT_WEEK;
     const comp = comparison ?? DEFAULT_COMPARISON;
-    const exBreakdown = exerciseBreakdown ?? [];
-    const wGraph = weeklyGraph ?? [];
+    const exBreakdown = useMemo(() => exerciseBreakdown ?? [], [exerciseBreakdown]);
     const nExercises = newExercises ?? [];
 
     const [breakdownOpen, setBreakdownOpen] = useState(false);
@@ -435,6 +421,7 @@ export default function Dashboard({
                                                 <tbody className="divide-y divide-white/5">
                                                     {exBreakdown.map((row) => {
                                                         const cfg = statusConfig(row.status);
+
                                                         return (
                                                             <tr key={row.name} className="hover:bg-indigo-500/5 transition-colors">
                                                                 <td className="px-5 py-3.5 font-bold text-slate-200">{row.name}</td>
@@ -468,6 +455,7 @@ export default function Dashboard({
                                         <div className="md:hidden divide-y divide-white/5">
                                             {exBreakdown.map((row) => {
                                                 const cfg = statusConfig(row.status);
+
                                                 return (
                                                     <div key={row.name} className="p-4 space-y-2">
                                                         <div className="flex items-center justify-between">

@@ -7,15 +7,15 @@ import {
     Zap,
     Activity,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import type { ContributionCalendarData } from '@/components/github-contribution-calendar';
+import GitHubContributionCalendar from '@/components/github-contribution-calendar';
 import {
     EdgeHeader,
     EdgeStat,
     EdgeCard,
     EdgeGrid,
-    EdgeBadge,
 } from '@/lib/edge/engine';
-import GitHubContributionCalendar, { ContributionCalendarData } from '@/components/github-contribution-calendar';
 
 interface WeekData {
     label: string;
@@ -56,26 +56,16 @@ interface ExerciseBreakdownRow {
     status: 'improved' | 'maintained' | 'declined';
 }
 
-interface WeeklyGraphPoint {
-    weekKey: string;
-    label: string;
-    score: number;
-}
-
 interface AnalyticsProps {
     currentWeek: WeekData;
     previousWeek: WeekData;
     comparison: ComparisonData;
     exerciseBreakdown: ExerciseBreakdownRow[];
-    weeklyGraph: WeeklyGraphPoint[];
     contributionCalendar?: ContributionCalendarData;
     newExercises: string[];
     hasData: boolean;
     hasTwoWeeks: boolean;
 }
-
-type TimeWindow = '4w' | '8w' | '12w' | 'all';
-const WINDOWS: Record<TimeWindow, number> = { '4w': 4, '8w': 8, '12w': 12, 'all': Infinity };
 
 function fmt(n: number, decimals = 1): string {
     return (n || 0).toFixed(decimals);
@@ -85,8 +75,8 @@ function fmtVol(v: number): string {
     const val = v || 0;
 
     if (Math.abs(val) >= 1000) {
-return `${(val / 1000).toFixed(1)}k`;
-}
+        return `${(val / 1000).toFixed(1)}k`;
+    }
 
     return val.toFixed(0);
 }
@@ -96,8 +86,8 @@ function generateInsights(
     currentWeek: WeekData,
 ): string[] {
     if (!comparison) {
-return [];
-}
+        return [];
+    }
 
     const insights: string[] = [];
 
@@ -124,27 +114,10 @@ return [];
     return insights;
 }
 
-function ChartTooltip({ active, payload, label }: any) {
-    if (!active || !payload?.length) {
-return null;
-}
-
-    const score = payload[0]?.value as number;
-
-    return (
-        <div className="rounded-2xl border border-indigo-500/30 bg-slate-900/90 backdrop-blur-md px-4 py-3 shadow-2xl">
-            <p className="text-xs font-bold text-slate-400 mb-0.5">{label}</p>
-            <p className="text-2xl font-black text-indigo-400 tracking-tight">{score.toFixed(1)}</p>
-            <p className="text-[10px] text-slate-500">EDGE Analytics Score</p>
-        </div>
-    );
-}
-
 export default function AnalyticsPage({
     currentWeek = { label: '', score: 0, workouts: 0, exercises: 0, totalSets: 0, totalReps: 0, totalVolume: 0, prCount: 0 },
     previousWeek = { label: '', score: 0, workouts: 0, exercises: 0, totalSets: 0, totalReps: 0, totalVolume: 0, prCount: 0 },
     comparison = { progressPct: 0, volumeDiff: 0, avgWeightDiff: 0, avgRepsDiff: 0, frequencyDiff: 0, improved: 0, maintained: 0, declined: 0, status: 'maintained' },
-    weeklyGraph = [],
     contributionCalendar,
     hasData = false,
 }: AnalyticsProps) {

@@ -182,6 +182,7 @@ export default function GitHubContributionCalendar({ data, className = '' }: Pro
             <div className="flex flex-row lg:flex-col gap-1.5 w-full lg:w-28 shrink-0">
                 {years.map((year) => {
                     const isActive = year === selectedYear;
+
                     return (
                         <button
                             key={year}

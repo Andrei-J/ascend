@@ -108,8 +108,14 @@ export default function HistoryPage({ history = [] }: { history?: LoggedWorkout[
         const mins = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
 
-        if (hrs > 0) return `${hrs}h ${mins}m`;
-        if (mins > 0) return `${mins}m`;
+        if (hrs > 0) {
+return `${hrs}h ${mins}m`;
+}
+
+        if (mins > 0) {
+return `${mins}m`;
+}
+
         return `${secs}s`;
     };
 
@@ -135,7 +141,9 @@ export default function HistoryPage({ history = [] }: { history?: LoggedWorkout[
         let maxReps = -1;
 
         for (const set of ex.sets) {
-            if (!set.isCompleted) continue;
+            if (!set.isCompleted) {
+continue;
+}
 
             const weightVal = set.weight !== null ? parseFloat(set.weight.toString()) : 0;
             const repsVal = set.reps || 0;
@@ -155,7 +163,10 @@ export default function HistoryPage({ history = [] }: { history?: LoggedWorkout[
 
     const formatBestSetText = (ex: LoggedExercise) => {
         const bestSet = getBestSet(ex);
-        if (!bestSet) return '—';
+
+        if (!bestSet) {
+return '—';
+}
 
         const weightVal = bestSet.weight !== null ? parseFloat(bestSet.weight.toString()) : 0;
         const repsVal = bestSet.reps || 0;
@@ -189,6 +200,7 @@ export default function HistoryPage({ history = [] }: { history?: LoggedWorkout[
                 }
             });
         });
+
         return total;
     };
 
@@ -262,6 +274,7 @@ export default function HistoryPage({ history = [] }: { history?: LoggedWorkout[
                                                     <div className="space-y-2">
                                                         {w.exercises.map((ex) => {
                                                             const completedSets = ex.sets.filter(s => s.isCompleted).length;
+
                                                             return (
                                                                 <div
                                                                     key={ex.id}

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BarChart2, Dumbbell, Folder, History, LayoutGrid } from 'lucide-react';
+import { Dumbbell, Folder, History, LayoutGrid } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -14,7 +14,6 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [

@@ -1,9 +1,8 @@
-import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { Dumbbell, Folder, History, LayoutGrid, BarChart2 } from 'lucide-react';
+import { useState } from 'react';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn } from '@/lib/utils';
-import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -60,7 +59,7 @@ export function AppMobileFooter({ variant = 'sidebar' }: Props) {
                             key={item.title}
                             href={item.href}
                             prefetch
-                            onClick={() => setSpinningHref(item.href)}
+                            onClick={() => setSpinningHref(typeof item.href === 'string' ? item.href : item.href.url)}
                             className={cn(
                                 'relative flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-slate-400 transition-all duration-300 hover:text-white group',
                                 active && 'text-indigo-400 font-semibold scale-105'

@@ -10,9 +10,8 @@ import {
     Check,
     Dumbbell,
     Timer,
-    SkipForward,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { useWorkout } from '@/hooks/use-workout';
@@ -267,13 +266,6 @@ export function ActiveWorkoutPanel() {
 
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [showRestPopup, setShowRestPopup] = useState(false);
-
-    // Auto-close popup when activeRest is cleared or timer finishes
-    useEffect(() => {
-        if (!activeRest) {
-            setShowRestPopup(false);
-        }
-    }, [activeRest]);
     const [showAddExercise, setShowAddExercise] = useState(false);
     const [exerciseLibrary, setExerciseLibrary] = useState<ExerciseLibraryItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');

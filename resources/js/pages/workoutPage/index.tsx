@@ -51,8 +51,12 @@ interface ExerciseType {
 }
 
 function exercisePreview(exercises: string[], max = 3): string {
-    if (exercises.length === 0) return 'No exercises configured';
+    if (exercises.length === 0) {
+return 'No exercises configured';
+}
+
     const shown = exercises.slice(0, max).join(', ');
+
     return exercises.length > max ? `${shown}, +${exercises.length - max} more` : shown;
 }
 
@@ -73,13 +77,17 @@ function EllipsisMenu({
     const isOpen = activeMenu === id;
 
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen) {
+return;
+}
+
         function handleClick(e: MouseEvent) {
             if (ref.current && !ref.current.contains(e.target as Node)) {
                 setActiveMenu(null);
             }
         }
         document.addEventListener('mousedown', handleClick);
+
         return () => document.removeEventListener('mousedown', handleClick);
     }, [isOpen, setActiveMenu]);
 
@@ -269,6 +277,7 @@ export default function WorkoutPage({
     const handleStartTemplate = (template: Template) => {
         const mapped = template.rawExercises.map((rawEx) => {
             const match = exercises.find((ex) => ex.id === rawEx.exercise_id);
+
             return {
                 exercise_id: rawEx.exercise_id,
                 name: match ? match.name : 'Unknown Exercise',
@@ -286,8 +295,13 @@ export default function WorkoutPage({
     const toggleFolder = (id: number) => {
         setOpenFolders((prev) => {
             const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
+
+            if (next.has(id)) {
+next.delete(id);
+} else {
+next.add(id);
+}
+
             return next;
         });
     };
@@ -316,6 +330,7 @@ export default function WorkoutPage({
         clearErrors();
         const mappedEx = template.rawExercises.map((rawEx) => {
             const match = exercises.find((ex) => ex.id === rawEx.exercise_id);
+
             return {
                 exercise_id: rawEx.exercise_id,
                 name: match ? match.name : 'Unknown Exercise',
@@ -335,7 +350,10 @@ export default function WorkoutPage({
     };
 
     const confirmDelete = () => {
-        if (!deleteTarget) return;
+        if (!deleteTarget) {
+return;
+}
+
         setIsDeleting(true);
         window.location.href = `/Workout/delete/${deleteTarget.id}`;
     };

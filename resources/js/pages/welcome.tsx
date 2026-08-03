@@ -1,8 +1,8 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
-import { dashboard, login, register } from '@/routes';
-import { EdgeBadge, EdgeButton, EdgeCard, EdgeGrid } from '@/lib/edge/engine';
 import { Dumbbell, Activity, Trophy, Zap, ArrowRight, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { EdgeBadge, EdgeButton, EdgeCard, EdgeGrid } from '@/lib/edge/engine';
+import { login, register } from '@/routes';
 
 export default function Welcome({
     canRegister = true,
@@ -15,6 +15,7 @@ export default function Welcome({
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener('scroll', handleScroll);
+
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
