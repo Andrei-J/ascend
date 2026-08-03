@@ -55,11 +55,17 @@ class AnalyticsService
                         'declined'      => 0,
                         'status'        => 'maintained',
                     ],
-                    'exerciseBreakdown' => [],
-                    'weeklyGraph'       => [],
-                    'newExercises'      => [],
-                    'hasData'           => false,
-                    'hasTwoWeeks'       => false,
+                    'exerciseBreakdown'    => [],
+                    'weeklyGraph'          => [],
+                    'contributionCalendar' => [
+                        'totalContributions' => 0,
+                        'selectedYear'       => (int)Carbon::now()->format('Y'),
+                        'availableYears'     => [(int)Carbon::now()->format('Y')],
+                        'days'               => [],
+                    ],
+                    'newExercises'         => [],
+                    'hasData'              => false,
+                    'hasTwoWeeks'          => false,
                 ];
             }
 
@@ -148,24 +154,22 @@ class AnalyticsService
             // ── 8. Weekly comparison deltas ───────────────────────────────────
             $comparison = $this->buildComparison($currentWeek, $previousWeek, $breakdown);
 
-            // ── 9. New exercises (set difference) O(n) ───────────────────────
-            $newExercises = array_values(array_diff_key(
-                $currentWeek['exerciseMap'],
-                $previousWeek['exerciseMap']
-            ));
+            // ── 10. Contribution Calendar (GitHub-style) ────────────────────
+            $contributionCalendar = $this->buildContributionCalendar($allWorkouts);
 
             return [
-                'currentWeek'       => $this->stripExerciseMap($currentWeek),
-                'previousWeek'      => $this->stripExerciseMap($previousWeek),
-                'comparison'        => $comparison,
-                'exerciseBreakdown' => $breakdown,
-                'weeklyGraph'       => $weeklyGraph,
-                'newExercises'      => array_keys(array_diff_key(
+                'currentWeek'          => $this->stripExerciseMap($currentWeek),
+                'previousWeek'         => $this->stripExerciseMap($previousWeek),
+                'comparison'           => $comparison,
+                'exerciseBreakdown'    => $breakdown,
+                'weeklyGraph'          => $weeklyGraph,
+                'contributionCalendar' => $contributionCalendar,
+                'newExercises'         => array_keys(array_diff_key(
                     $currentWeek['exerciseMap'],
                     $previousWeek['exerciseMap']
                 )),
-                'hasData'           => count($allWorkouts) > 0,
-                'hasTwoWeeks'       => count($currWeekWorkouts) > 0 && count($prevWeekWorkouts) > 0,
+                'hasData'              => count($allWorkouts) > 0,
+                'hasTwoWeeks'          => count($currWeekWorkouts) > 0 && count($prevWeekWorkouts) > 0,
             ];
         } catch (Exception $e) {
             Log::error('AnalyticsService::getWeeklyAnalytics failed: ' . $e->getMessage());
@@ -400,5 +404,99 @@ class AnalyticsService
     {
         unset($weekData['exerciseMap']);
         return $weekData;
+    }
+
+    /**
+     * Build GitHub contribution calendar heatmap data for the past 52 weeks.
+     */
+    private function buildContributionCalendar($allWorkouts): array
+    {
+        $now = Carbon::now();
+        $currentYear = (int)$now->format('Y');
+
+        $yearsSet = [];
+        $yearsSet[$currentYear] = true;
+
+        $dailyMap = [];
+
+        foreach ($allWorkouts as $workout) {
+            if (!$workout->completed_at) {
+                continue;
+            }
+
+            $dateKey = $workout->completed_at->format('Y-m-d');
+            $year = (int)$workout->completed_at->format('Y');
+            $yearsSet[$year] = true;
+
+            if (!isset($dailyMap[$dateKey])) {
+                $dailyMap[$dateKey] = [
+                    'count'  => 0,
+                    'sets'   => 0,
+                    'volume' => 0.0,
+                ];
+            }
+
+            $dailyMap[$dateKey]['count']++;
+
+            foreach ($workout->exercises as $ex) {
+                foreach ($ex->sets as $set) {
+                    if ($set->is_completed) {
+                        $dailyMap[$dateKey]['sets']++;
+                        $dailyMap[$dateKey]['volume'] += (float)($set->weight ?? 0) * (int)($set->reps ?? 0);
+                    }
+                }
+            }
+        }
+
+        $availableYears = array_keys($yearsSet);
+        rsort($availableYears);
+
+        $endDate = $now->copy()->endOfWeek(Carbon::SUNDAY);
+        $startDate = $endDate->copy()->subWeeks(51)->startOfWeek(Carbon::SUNDAY);
+
+        $days = [];
+        $totalContributions = 0;
+
+        $cursor = $startDate->copy();
+        while ($cursor->lte($endDate)) {
+            $dateStr = $cursor->format('Y-m-d');
+            $stats = $dailyMap[$dateStr] ?? ['count' => 0, 'sets' => 0, 'volume' => 0.0];
+
+            $setCount = $stats['sets'];
+            $workoutCount = $stats['count'];
+
+            if ($setCount === 0 && $workoutCount === 0) {
+                $level = 0;
+            } elseif ($setCount <= 3) {
+                $level = 1;
+            } elseif ($setCount <= 7) {
+                $level = 2;
+            } elseif ($setCount <= 12) {
+                $level = 3;
+            } else {
+                $level = 4;
+            }
+
+            if ($setCount > 0 || $workoutCount > 0) {
+                $totalContributions += max($workoutCount, 1);
+            }
+
+            $days[] = [
+                'date'   => $dateStr,
+                'count'  => $workoutCount,
+                'sets'   => $setCount,
+                'volume' => round($stats['volume'], 1),
+                'level'  => $level,
+            ];
+
+            $cursor->addDay();
+        }
+
+        return [
+            'totalContributions' => $totalContributions,
+            'selectedYear'       => $currentYear,
+            'availableYears'     => $availableYears,
+            'days'               => $days,
+        ];
     }
 }

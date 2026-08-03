@@ -9,22 +9,13 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import {
-    AreaChart,
-    Area,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    ReferenceLine,
-} from 'recharts';
-import {
     EdgeHeader,
     EdgeStat,
     EdgeCard,
     EdgeGrid,
     EdgeBadge,
 } from '@/lib/edge/engine';
+import GitHubContributionCalendar, { ContributionCalendarData } from '@/components/github-contribution-calendar';
 
 interface WeekData {
     label: string;
@@ -77,6 +68,7 @@ interface AnalyticsProps {
     comparison: ComparisonData;
     exerciseBreakdown: ExerciseBreakdownRow[];
     weeklyGraph: WeeklyGraphPoint[];
+    contributionCalendar?: ContributionCalendarData;
     newExercises: string[];
     hasData: boolean;
     hasTwoWeeks: boolean;
@@ -153,41 +145,13 @@ export default function AnalyticsPage({
     previousWeek = { label: '', score: 0, workouts: 0, exercises: 0, totalSets: 0, totalReps: 0, totalVolume: 0, prCount: 0 },
     comparison = { progressPct: 0, volumeDiff: 0, avgWeightDiff: 0, avgRepsDiff: 0, frequencyDiff: 0, improved: 0, maintained: 0, declined: 0, status: 'maintained' },
     weeklyGraph = [],
+    contributionCalendar,
     hasData = false,
 }: AnalyticsProps) {
-    const [activeWindow, setActiveWindow] = useState<TimeWindow>('8w');
-
-    const chartData = useMemo(() => {
-        const limit = WINDOWS[activeWindow];
-
-        return limit === Infinity ? weeklyGraph : weeklyGraph.slice(-limit);
-    }, [weeklyGraph, activeWindow]);
-
     const insights = useMemo(
         () => generateInsights(comparison, currentWeek),
         [comparison, currentWeek]
     );
-
-    const trend = useMemo(() => {
-        if (chartData.length < 2) {
-return 'neutral';
-}
-
-        const last = chartData[chartData.length - 1].score;
-        const prev = chartData[chartData.length - 2].score;
-
-        if (last > prev + 1) {
-return 'up';
-}
-
-        if (last < prev - 1) {
-return 'down';
-}
-
-        return 'flat';
-    }, [chartData]);
-
-    const trendColor = trend === 'up' ? '#10b981' : trend === 'down' ? '#f43f5e' : '#818cf8';
 
     return (
         <>
@@ -196,7 +160,7 @@ return 'down';
             <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 md:p-8 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] md:pb-12">
                 <EdgeHeader
                     title="Performance Analytics"
-                    subtitle="Advanced volume metrics, progress breakdown, and weekly trend analysis."
+                    subtitle="Advanced volume metrics, progress breakdown, and workout activity heatmap."
                     icon={<BarChart2 className="h-7 w-7 text-indigo-400" />}
                 />
 
@@ -212,60 +176,7 @@ return 'down';
                     </EdgeCard>
                 ) : (
                     <>
-                        <EdgeCard
-                            variant="glass"
-                            elevation="lg"
-                            glow
-                            title={
-                                <div className="space-y-1">
-                                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                        <span>Weekly Performance Index</span>
-                                        <EdgeBadge text={`${chartData.length} WEEKS`} variant="accent" />
-                                    </h2>
-                                    <p className="text-xs text-slate-400">
-                                        {trend === 'up' && <span className="text-emerald-400 font-bold">↗ Trending Up</span>}
-                                        {trend === 'down' && <span className="text-rose-400 font-bold">↘ Trending Down</span>}
-                                        {trend === 'flat' && <span className="text-indigo-400 font-bold">→ Stable Trajectory</span>}
-                                    </p>
-                                </div>
-                            }
-                            headerAction={
-                                <div className="flex rounded-xl border border-slate-800 bg-slate-950/80 p-1 gap-1">
-                                    {(['4w', '8w', '12w', 'all'] as TimeWindow[]).map((w) => (
-                                        <button
-                                            key={w}
-                                            onClick={() => setActiveWindow(w)}
-                                            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
-                                                activeWindow === w
-                                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                                                    : 'text-slate-400 hover:text-white'
-                                            }`}
-                                        >
-                                            {w === 'all' ? 'All' : w.toUpperCase()}
-                                        </button>
-                                    ))}
-                                </div>
-                            }
-                        >
-                            <div className="h-64 pt-2">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: -24 }}>
-                                        <defs>
-                                            <linearGradient id="analyticsGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor={trendColor} stopOpacity={0.4} />
-                                                <stop offset="95%" stopColor={trendColor} stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                                        <XAxis dataKey="label" tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
-                                        <YAxis tick={{ fill: '#94A3B8', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 100]} />
-                                        <Tooltip content={<ChartTooltip />} />
-                                        <ReferenceLine y={50} stroke="rgba(255,255,255,0.15)" strokeDasharray="4 4" />
-                                        <Area type="monotone" dataKey="score" stroke={trendColor} strokeWidth={3} fill="url(#analyticsGrad)" dot={{ fill: trendColor, r: 4 }} activeDot={{ fill: '#fff', r: 6, stroke: trendColor }} />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </EdgeCard>
+                        <GitHubContributionCalendar data={contributionCalendar} />
 
                         <EdgeGrid columns="responsive" gap="md">
                             <EdgeStat

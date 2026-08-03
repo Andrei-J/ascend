@@ -1,14 +1,4 @@
 import { Head } from '@inertiajs/react';
-import {
-    AreaChart,
-    Area,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    ReferenceLine,
-} from 'recharts';
 import { useMemo, useState } from 'react';
 import {
     BarChart2,
@@ -32,6 +22,7 @@ import {
     EdgeGrid,
     EdgeBadge,
 } from '@/lib/edge/engine';
+import GitHubContributionCalendar, { ContributionCalendarData } from '@/components/github-contribution-calendar';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -86,6 +77,7 @@ interface DashboardProps {
     comparison?: ComparisonData;
     exerciseBreakdown?: ExerciseBreakdownRow[];
     weeklyGraph?: WeeklyGraphPoint[];
+    contributionCalendar?: ContributionCalendarData;
     newExercises?: string[];
     hasData?: boolean;
     hasTwoWeeks?: boolean;
@@ -228,6 +220,7 @@ export default function Dashboard({
     comparison,
     exerciseBreakdown,
     weeklyGraph,
+    contributionCalendar,
     newExercises,
     hasData = false,
     hasTwoWeeks = false,
@@ -239,30 +232,14 @@ export default function Dashboard({
     const wGraph = weeklyGraph ?? [];
     const nExercises = newExercises ?? [];
 
-    const [activeWindow, setActiveWindow] = useState<TimeWindow>('8w');
     const [breakdownOpen, setBreakdownOpen] = useState(false);
-
-    const chartData = useMemo(() => {
-        const limit = WINDOWS[activeWindow];
-        return limit === Infinity ? wGraph : wGraph.slice(-limit);
-    }, [wGraph, activeWindow]);
 
     const insights = useMemo(
         () => hasTwoWeeks ? generateInsights(comp, exBreakdown, cWeek, pWeek) : [],
         [comp, exBreakdown, cWeek, pWeek, hasTwoWeeks]
     );
 
-    const trend = useMemo(() => {
-        if (chartData.length < 2) return 'neutral';
-        const last = chartData[chartData.length - 1].score;
-        const prev = chartData[chartData.length - 2].score;
-        if (last > prev + 1) return 'up';
-        if (last < prev - 1) return 'down';
-        return 'flat';
-    }, [chartData]);
-
     const statusCfg = statusConfig(comp.status);
-    const trendColor = trend === 'up' ? '#10b981' : trend === 'down' ? '#f43f5e' : '#818cf8';
 
     return (
         <>
@@ -271,7 +248,7 @@ export default function Dashboard({
             <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 md:p-8 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] md:pb-12">
                 <EdgeHeader
                     title="Dashboard"
-                    subtitle="Your weekly performance overview — track, compare, and elevate your fitness gains."
+                    subtitle="Your workout performance overview — track, compare, and elevate your fitness gains."
                     icon={<BarChart2 className="h-7 w-7 text-indigo-400" />}
                 />
 
@@ -289,86 +266,7 @@ export default function Dashboard({
 
                 {hasData && (
                     <>
-                        <EdgeCard
-                            variant="glass"
-                            elevation="lg"
-                            glow
-                            title={
-                                <div className="space-y-1">
-                                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                        <span>Weekly Performance Score</span>
-                                        <EdgeBadge text={`${chartData.length} WEEKS`} variant="accent" />
-                                    </h2>
-                                    <p className="text-xs text-slate-400">
-                                        {trend === 'up' && <span className="text-emerald-400 font-bold">↗ Trending up</span>}
-                                        {trend === 'down' && <span className="text-rose-400 font-bold">↘ Trending down</span>}
-                                        {trend === 'flat' && <span className="text-indigo-400 font-bold">→ Stable trajectory</span>}
-                                        {trend === 'neutral' && <span className="text-slate-400">Building performance history...</span>}
-                                    </p>
-                                </div>
-                            }
-                            headerAction={
-                                <div className="flex rounded-xl border border-slate-800 bg-slate-950/80 p-1 gap-1">
-                                    {(['4w', '8w', '12w', 'all'] as TimeWindow[]).map((w) => (
-                                        <button
-                                            key={w}
-                                            onClick={() => setActiveWindow(w)}
-                                            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
-                                                activeWindow === w
-                                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                                                    : 'text-slate-400 hover:text-white'
-                                            }`}
-                                        >
-                                            {w === 'all' ? 'All' : w.toUpperCase()}
-                                        </button>
-                                    ))}
-                                </div>
-                            }
-                        >
-                            {chartData.length === 0 ? (
-                                <div className="flex h-56 items-center justify-center text-sm text-slate-500">
-                                    Not enough data points for selected window
-                                </div>
-                            ) : (
-                                <div className="h-64 pt-2">
-                                    <ResponsiveContainer width="100%" height="100%" minHeight={200}>
-                                        <AreaChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: -24 }}>
-                                            <defs>
-                                                <linearGradient id="edgeGrad" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%"  stopColor={trendColor} stopOpacity={0.4} />
-                                                    <stop offset="95%" stopColor={trendColor} stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                                            <XAxis
-                                                dataKey="label"
-                                                tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 600 }}
-                                                axisLine={false}
-                                                tickLine={false}
-                                            />
-                                            <YAxis
-                                                tick={{ fill: '#94A3B8', fontSize: 11 }}
-                                                axisLine={false}
-                                                tickLine={false}
-                                                domain={[0, 100]}
-                                            />
-                                            <Tooltip content={<ChartTooltip />} />
-                                            <ReferenceLine y={50} stroke="rgba(255,255,255,0.15)" strokeDasharray="4 4" />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="score"
-                                                stroke={trendColor}
-                                                strokeWidth={3}
-                                                fill="url(#edgeGrad)"
-                                                dot={{ fill: trendColor, r: 4, strokeWidth: 0 }}
-                                                activeDot={{ fill: '#fff', r: 6, strokeWidth: 3, stroke: trendColor }}
-                                                animationDuration={600}
-                                            />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            )}
-                        </EdgeCard>
+                        <GitHubContributionCalendar data={contributionCalendar} />
 
                         <EdgeGrid columns="responsive" gap="md">
                             <EdgeStat
@@ -510,7 +408,7 @@ export default function Dashboard({
                                         </div>
                                         <div>
                                             <h2 className="text-base font-bold text-white">Exercise Breakdown Engine</h2>
-                                            <p className="text-xs text-slate-400">{exerciseBreakdown.length} exercises analyzed week-over-week</p>
+                                            <p className="text-xs text-slate-400">{exBreakdown.length} exercises analyzed week-over-week</p>
                                         </div>
                                     </div>
                                     {breakdownOpen
@@ -535,7 +433,7 @@ export default function Dashboard({
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-white/5">
-                                                    {exerciseBreakdown.map((row) => {
+                                                    {exBreakdown.map((row) => {
                                                         const cfg = statusConfig(row.status);
                                                         return (
                                                             <tr key={row.name} className="hover:bg-indigo-500/5 transition-colors">
@@ -568,7 +466,7 @@ export default function Dashboard({
                                         </div>
 
                                         <div className="md:hidden divide-y divide-white/5">
-                                            {exerciseBreakdown.map((row) => {
+                                            {exBreakdown.map((row) => {
                                                 const cfg = statusConfig(row.status);
                                                 return (
                                                     <div key={row.name} className="p-4 space-y-2">
@@ -599,13 +497,13 @@ export default function Dashboard({
                                             })}
                                         </div>
 
-                                        {newExercises.length > 0 && (
+                                        {nExercises.length > 0 && (
                                             <div className="border-t border-white/10 p-5 bg-indigo-500/5">
                                                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
                                                     New Exercises Added This Week
                                                 </p>
                                                 <div className="flex flex-wrap gap-2">
-                                                    {newExercises.map(name => (
+                                                    {nExercises.map(name => (
                                                         <EdgeBadge key={name} text={`✦ ${name}`} variant="neon" />
                                                     ))}
                                                 </div>

@@ -705,9 +705,9 @@ export default function WorkoutPage({
                     </aside>
 
                     <div className="flex flex-col gap-6">
-                        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-lg font-black text-white">
+                        <div className="flex flex-row items-center justify-between gap-3 border-b border-white/10 pb-3 flex-wrap sm:flex-nowrap">
+                            <div className="flex items-center gap-2.5 shrink-0">
+                                <h2 className="text-base sm:text-lg font-black text-white whitespace-nowrap">
                                     My Workout Templates
                                 </h2>
                                 <EdgeBadge text={`${myTemplates.length}`} variant="accent" />
@@ -716,6 +716,7 @@ export default function WorkoutPage({
                                 variant="subtle"
                                 icon={<Plus className="h-3.5 w-3.5" />}
                                 onClick={handleCreate}
+                                className="whitespace-nowrap shrink-0 text-xs sm:text-sm"
                             >
                                 New Template
                             </EdgeButton>
