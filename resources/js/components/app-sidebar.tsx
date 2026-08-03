@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { Dumbbell, Folder, History, LayoutGrid } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -13,29 +13,48 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: '/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: 'Workout',
+        href: '/Workout',
+        icon: Dumbbell,
+    },
+    {
+        title: 'History',
+        href: '/History',
+        icon: History,
+    },
+    {
+        title: 'Exercises',
+        href: '/Exercises',
+        icon: Folder,
     },
 ];
 
-const footerNavItems: NavItem[] = [
-   
-];
+const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
+    const isMobile = useIsMobile();
+
+    if (isMobile) {
+        return null;
+    }
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href="/dashboard" prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

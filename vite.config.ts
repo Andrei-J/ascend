@@ -5,12 +5,15 @@ import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig } from 'vite';
-
+import { nativephpMobile, nativephpHotFile } from './vendor/nativephp/mobile/resources/js/vite-plugin.js'; 
+ 
 export default defineConfig({
     plugins: [
+        nativephpMobile(),
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
             refresh: true,
+            hotFile: nativephpHotFile(), 
             fonts: [
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
@@ -28,4 +31,9 @@ export default defineConfig({
             formVariants: true,
         }),
     ],
+    build: {
+        target: 'esnext',
+        chunkSizeWarningLimit: 1000,
+        cssCodeSplit: true,
+    },
 });

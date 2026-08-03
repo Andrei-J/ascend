@@ -141,3 +141,45 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* ─── Safe Area Inset Utilities ─────────────────────────────────────────────
+   These use CSS env() to respect the Android/iOS status bar, notch, and
+   navigation bar / home indicator when viewport-fit=cover is active.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+    --sat: env(safe-area-inset-top, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+}
+
+.pt-safe {
+    padding-top: var(--sat);
+}
+.pr-safe {
+    padding-right: var(--sar);
+}
+.pb-safe {
+    padding-bottom: var(--sab);
+}
+.pl-safe {
+    padding-left: var(--sal);
+}
+
+.mt-safe {
+    margin-top: var(--sat);
+}
+.mb-safe {
+    margin-bottom: var(--sab);
+}
+
+/* Header shell: extend background behind the status bar */
+.h-safe-header {
+    height: calc(4rem + var(--sat)); /* 4rem = h-16 */
+    padding-top: var(--sat);
+}
+
+/* Offset scrollable content so it starts below the safe-area-aware header */
+.top-safe-header {
+    top: calc(4rem + var(--sat));
+}
