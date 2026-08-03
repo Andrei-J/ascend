@@ -440,7 +440,7 @@ class AnalyticsService
 
             foreach ($workout->exercises as $ex) {
                 foreach ($ex->sets as $set) {
-                    if ($set->is_completed) {
+                    if ($set->is_completed || $workout->completed_at) {
                         $dailyMap[$dateKey]['sets']++;
                         $dailyMap[$dateKey]['volume'] += (float)($set->weight ?? 0) * (int)($set->reps ?? 0);
                     }
@@ -465,7 +465,7 @@ class AnalyticsService
             $setCount = $stats['sets'];
             $workoutCount = $stats['count'];
 
-            if ($setCount === 0 && $workoutCount === 0) {
+            if ($workoutCount === 0 && $setCount === 0) {
                 $level = 0;
             } elseif ($setCount <= 3) {
                 $level = 1;
