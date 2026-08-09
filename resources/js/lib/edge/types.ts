@@ -29,7 +29,13 @@ export type EdgeVariant =
 
 export type EdgeElevation = 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'glow';
 
-export type EdgeAnimation = 'fade' | 'slide-up' | 'scale' | 'bounce' | 'pulse' | 'none';
+export type EdgeAnimation =
+    | 'fade'
+    | 'slide-up'
+    | 'scale'
+    | 'bounce'
+    | 'pulse'
+    | 'none';
 
 export interface EdgeActionConfig {
     label?: string;

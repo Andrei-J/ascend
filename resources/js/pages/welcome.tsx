@@ -1,5 +1,12 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Dumbbell, Activity, Trophy, Zap, ArrowRight, Sparkles } from 'lucide-react';
+import {
+    Dumbbell,
+    Activity,
+    Trophy,
+    Zap,
+    ArrowRight,
+    Sparkles,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { EdgeBadge, EdgeButton, EdgeCard, EdgeGrid } from '@/lib/edge/engine';
 import { login, register } from '@/routes';
@@ -21,47 +28,46 @@ export default function Welcome({
 
     const features = [
         {
-            icon: <Dumbbell className="w-6 h-6 text-indigo-400" />,
+            icon: <Dumbbell className="h-6 w-6 text-indigo-400" />,
             title: 'Smart Workout Studio',
             desc: 'Log every set, weight, rep, and rest timer with real-time feedback and EDGE reactive engine.',
         },
         {
-            icon: <Activity className="w-6 h-6 text-purple-400" />,
+            icon: <Activity className="h-6 w-6 text-purple-400" />,
             title: 'Analytics & Insights',
             desc: 'Continuous performance scoring, volume trends, and week-over-week AI progressive overload analysis.',
         },
         {
-            icon: <Trophy className="w-6 h-6 text-rose-400" />,
+            icon: <Trophy className="h-6 w-6 text-rose-400" />,
             title: 'PR & Record Engine',
             desc: 'Automatic record tracking for strength milestones. Celebrate personal bests across all exercises.',
         },
-    ];
-
-    const stats = [
-        { value: '10k+', label: 'Workouts Logged' },
-        { value: '500+', label: 'Exercises Cataloged' },
-        { value: '98%', label: 'User Satisfaction' },
-        { value: '∞', label: 'Potential Unlocked' },
     ];
 
     return (
         <>
             <Head>
                 <title>Ascend — Elevate Your Training with EDGE Engine</title>
-                <meta name="description" content="Ascend is the next-generation minimalist workout tracker powered by EDGE Element Definition and Generation Engine." />
+                <meta
+                    name="description"
+                    content="Ascend is the next-generation minimalist workout tracker powered by EDGE Element Definition and Generation Engine."
+                />
             </Head>
 
-            <div className="min-h-screen bg-[#090D16] text-white overflow-x-hidden relative font-sans">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-indigo-600/20 via-purple-600/10 to-transparent blur-[120px] pointer-events-none" />
-                <div className="absolute top-[40%] right-[-10%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
+            <div className="relative min-h-screen overflow-x-hidden bg-[#090D16] font-sans text-white">
+                <div className="pointer-events-none absolute top-0 left-1/2 h-[500px] w-[1000px] -translate-x-1/2 bg-gradient-to-b from-indigo-600/20 via-purple-600/10 to-transparent blur-[120px]" />
+                <div className="pointer-events-none absolute top-[40%] right-[-10%] h-[500px] w-[500px] rounded-full bg-cyan-500/10 blur-[140px]" />
 
                 <nav
-                    className={`fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-500 ${scrolled ? 'bg-slate-950/85 backdrop-blur-xl border-b border-white/10 shadow-2xl' : ''
-                        }`}
+                    className={`fixed inset-x-0 top-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-500 ${
+                        scrolled
+                            ? 'border-b border-white/10 bg-[#090d16]/90 shadow-2xl backdrop-blur-xl'
+                            : 'bg-transparent'
+                    }`}
                 >
                     <div className="flex items-center gap-2">
-                        <span className="text-2xl font-black tracking-tight flex items-center gap-2">
-                            <Zap className="w-6 h-6 text-indigo-400 fill-indigo-400" />
+                        <span className="flex items-center gap-1.5 text-2xl font-black tracking-tight">
+                            <Zap className="h-6 w-6 fill-indigo-400 text-indigo-400" />
                             <span className="text-white">asc</span>
                             <span className="text-indigo-400">end</span>
                         </span>
@@ -70,18 +76,30 @@ export default function Welcome({
                     <div className="flex items-center gap-3">
                         {auth.user ? (
                             <Link href="/dashboard" id="nav-dashboard">
-                                <EdgeButton as="span" variant="gradient" glow icon={<ArrowRight className="w-4 h-4" />}>
+                                <EdgeButton
+                                    as="span"
+                                    variant="gradient"
+                                    glow
+                                    icon={<ArrowRight className="h-4 w-4" />}
+                                    className="rounded-xl px-4 py-2 text-sm font-bold"
+                                >
                                     Dashboard
                                 </EdgeButton>
                             </Link>
                         ) : (
                             <>
                                 <Link href={login()} id="nav-login">
-                                    <EdgeButton as="span" variant="ghost">Sign in</EdgeButton>
+                                    <EdgeButton as="span" variant="ghost">
+                                        Sign in
+                                    </EdgeButton>
                                 </Link>
                                 {canRegister && (
                                     <Link href={register()} id="nav-register">
-                                        <EdgeButton as="span" variant="gradient" glow>
+                                        <EdgeButton
+                                            as="span"
+                                            variant="gradient"
+                                            glow
+                                        >
                                             Get Started
                                         </EdgeButton>
                                     </Link>
@@ -91,35 +109,61 @@ export default function Welcome({
                     </div>
                 </nav>
 
-                <section className="relative pt-36 pb-24 px-6 max-w-6xl mx-auto text-center flex flex-col items-center">
-                    <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white leading-none max-w-4xl">
-                        Train with <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">purpose.</span>
+                <section className="relative mx-auto flex max-w-4xl flex-col items-center px-6 pt-32 pb-16 text-center">
+                    <h1 className="max-w-3xl text-4xl leading-tight font-black tracking-tight text-white sm:text-6xl md:text-7xl">
+                        Train with{' '}
+                        <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-rose-400 bg-clip-text text-transparent">
+                            purpose.
+                        </span>
                         <br />
-                        Ascend further.
+                        Ascend{' '}
+                        <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                            further.
+                        </span>
                     </h1>
 
-                    <p className="mt-6 text-base sm:text-xl text-slate-400 max-w-2xl leading-relaxed font-normal">
-                        The minimalist, high-performance workout tracker built for lifters who demand progress. Log smarter, lift heavier, and conquer plateaus.
+                    <p className="mt-6 max-w-xl text-sm leading-relaxed font-normal text-slate-400 sm:text-base">
+                        The minimalist, high-performance workout tracker built
+                        for lifters who demand progress. Log smarter, lift
+                        heavier, and conquer plateaus.
                     </p>
 
-                    <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md">
+                    <div className="mt-8 flex w-full max-w-xs flex-col items-center justify-center gap-4">
                         {auth.user ? (
-                            <Link href="/dashboard" className="w-full sm:w-auto">
-                                <EdgeButton as="span" variant="gradient" elevation="glow" glow icon={<Zap className="w-5 h-5" />} className="w-full sm:w-auto px-8 py-3.5 text-base">
+                            <Link href="/dashboard" className="w-full">
+                                <EdgeButton
+                                    as="span"
+                                    variant="gradient"
+                                    elevation="glow"
+                                    glow
+                                    icon={<Zap className="h-5 w-5" />}
+                                    className="w-full justify-center rounded-2xl py-3.5 text-base font-bold"
+                                >
                                     Open Dashboard
                                 </EdgeButton>
                             </Link>
                         ) : (
                             <>
                                 {canRegister && (
-                                    <Link href={register()} className="w-full sm:w-auto">
-                                        <EdgeButton as="span" variant="gradient" elevation="glow" glow icon={<ArrowRight className="w-5 h-5" />} className="w-full sm:w-auto px-8 py-3.5 text-base">
+                                    <Link href={register()} className="w-full">
+                                        <EdgeButton
+                                            as="span"
+                                            variant="gradient"
+                                            elevation="glow"
+                                            glow
+                                            icon={<ArrowRight className="h-5 w-5" />}
+                                            className="w-full justify-center rounded-2xl py-3.5 text-base font-bold"
+                                        >
                                             Start for free
                                         </EdgeButton>
                                     </Link>
                                 )}
-                                <Link href={login()} className="w-full sm:w-auto">
-                                    <EdgeButton as="span" variant="glass" className="w-full sm:w-auto px-8 py-3.5 text-base">
+                                <Link href={login()} className="w-full">
+                                    <EdgeButton
+                                        as="span"
+                                        variant="glass"
+                                        className="w-full justify-center rounded-2xl py-3.5 text-base font-bold"
+                                    >
                                         Sign in
                                     </EdgeButton>
                                 </Link>
@@ -127,26 +171,40 @@ export default function Welcome({
                         )}
                     </div>
 
-                    <div className="mt-20 w-full max-w-4xl">
-                        <EdgeGrid columns={4} gap="md">
-                            {stats.map((s, idx) => (
-                                <EdgeCard key={idx} variant="glass" elevation="md" className="py-6 text-center">
-                                    <p className="text-3xl sm:text-4xl font-black text-indigo-400 tracking-tight">{s.value}</p>
-                                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">{s.label}</p>
-                                </EdgeCard>
-                            ))}
-                        </EdgeGrid>
+                    <div className="mt-16 w-full max-w-md space-y-4">
+                        {[
+                            { value: '10k+', label: 'WORKOUTS LOGGED' },
+                            { value: '500+', label: 'EXERCISES CATALOGED' },
+                            { value: '98%', label: 'USER SATISFACTION' },
+                        ].map((s, idx) => (
+                            <div
+                                key={idx}
+                                className="rounded-2xl border border-white/10 bg-slate-900/50 py-6 text-center shadow-lg backdrop-blur-md"
+                            >
+                                <p className="text-3xl font-black tracking-tight text-indigo-400 sm:text-4xl">
+                                    {s.value}
+                                </p>
+                                <p className="mt-1 text-xs font-bold tracking-wider text-slate-400 uppercase">
+                                    {s.label}
+                                </p>
+                            </div>
+                        ))}
                     </div>
                 </section>
 
-                <section className="py-20 px-6 max-w-6xl mx-auto border-t border-white/5">
-                    <div className="text-center max-w-2xl mx-auto mb-14">
-                        <EdgeBadge text="FEATURES" variant="accent" className="mb-3" />
-                        <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                <section className="mx-auto max-w-6xl border-t border-white/5 px-6 py-20">
+                    <div className="mx-auto mb-14 max-w-2xl text-center">
+                        <EdgeBadge
+                            text="FEATURES"
+                            variant="accent"
+                            className="mb-3"
+                        />
+                        <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
                             Engineered for peak performance
                         </h2>
-                        <p className="text-slate-400 mt-2 text-sm">
-                            Everything you need to plan, track, and elevate your fitness journey.
+                        <p className="mt-2 text-sm text-slate-400">
+                            Everything you need to plan, track, and elevate your
+                            fitness journey.
                         </p>
                     </div>
 
@@ -161,18 +219,25 @@ export default function Welcome({
                                 title={f.title}
                                 className="text-left"
                             >
-                                <p className="text-sm text-slate-400 leading-relaxed mt-2">{f.desc}</p>
+                                <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                                    {f.desc}
+                                </p>
                             </EdgeCard>
                         ))}
                     </EdgeGrid>
                 </section>
 
-                <footer className="py-12 border-t border-white/10 text-center text-xs text-slate-500">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                        <Sparkles className="w-4 h-4 text-indigo-400" />
-                        <span className="font-bold text-slate-300">Ascend EDGE UI Framework</span>
+                <footer className="border-t border-white/10 py-12 text-center text-xs text-slate-500">
+                    <div className="mb-2 flex items-center justify-center gap-2">
+                        <Sparkles className="h-4 w-4 text-indigo-400" />
+                        <span className="font-bold text-slate-300">
+                            Ascend EDGE UI Framework
+                        </span>
                     </div>
-                    <p>© 2026 Ascend Fitness. Built with NativePHP & Inertia.js.</p>
+                    <p>
+                        © 2026 Ascend Fitness. Built with NativePHP &
+                        Inertia.js.
+                    </p>
                 </footer>
             </div>
         </>

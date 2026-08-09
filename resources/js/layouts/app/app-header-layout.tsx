@@ -11,7 +11,10 @@ export default function AppHeaderLayout({
     return (
         <AppShell variant="header">
             <AppHeader breadcrumbs={breadcrumbs} />
-            <AppContent variant="header" className="pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
+            <AppContent
+                variant="header"
+                className="pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:pb-0"
+            >
                 {children}
             </AppContent>
             <AppMobileFooter variant="header" />

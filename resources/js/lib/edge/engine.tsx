@@ -33,13 +33,18 @@ export const EdgeBadge = memo(function EdgeBadge({
     return (
         <span
             className={cn(
-                'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-300',
+                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide transition-all duration-300',
                 getVariantClasses(variant),
-                glow && 'shadow-[0_0_12px_rgba(99,102,241,0.5)] border-indigo-400/60',
-                className
+                glow &&
+                    'border-indigo-400/60 shadow-[0_0_12px_rgba(99,102,241,0.5)]',
+                className,
             )}
         >
-            {icon && <span className="w-3.5 h-3.5 flex items-center justify-center">{icon}</span>}
+            {icon && (
+                <span className="flex h-3.5 w-3.5 items-center justify-center">
+                    {icon}
+                </span>
+            )}
             <span>{text}</span>
         </span>
     );
@@ -73,18 +78,22 @@ export const EdgeButton = memo(function EdgeButton({
         <Component
             disabled={Component === 'button' ? disabled || loading : undefined}
             className={cn(
-                'inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer',
+                'inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 active:scale-95 disabled:pointer-events-none disabled:opacity-50',
                 getVariantClasses(variant),
                 getElevationClasses(elevation),
                 glow && 'shadow-[0_0_20px_rgba(99,102,241,0.4)]',
-                className
+                className,
             )}
             {...(props as any)}
         >
             {loading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
             ) : (
-                icon && <span className="w-4 h-4 flex items-center justify-center">{icon}</span>
+                icon && (
+                    <span className="flex h-4 w-4 items-center justify-center">
+                        {icon}
+                    </span>
+                )
             )}
             <span>{children}</span>
         </Component>
@@ -130,20 +139,20 @@ export const EdgeStat = memo(function EdgeStat({
         <div
             onClick={onClick}
             className={cn(
-                'relative overflow-hidden rounded-2xl p-4 sm:p-5 transition-all duration-300 group',
+                'group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 sm:p-5',
                 onClick && 'cursor-pointer hover:-translate-y-1',
                 getVariantClasses(variant),
                 getElevationClasses(elevation),
                 getAnimationClasses(animation),
-                className
+                className,
             )}
         >
-            <div className="absolute -top-10 -right-10 w-28 h-28 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-500 pointer-events-none" />
+            <div className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-indigo-500/10 blur-2xl transition-all duration-500 group-hover:bg-indigo-500/20" />
 
-            <div className="flex items-start justify-between gap-3 mb-2">
+            <div className="mb-2 flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                     {icon && (
-                        <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700/60 text-indigo-400 group-hover:scale-110 group-hover:text-indigo-300 transition-all duration-300">
+                        <div className="rounded-xl border border-slate-700/60 bg-slate-800/80 p-2 text-indigo-400 transition-all duration-300 group-hover:scale-110 group-hover:text-indigo-300">
                             {icon}
                         </div>
                     )}
@@ -159,12 +168,12 @@ export const EdgeStat = memo(function EdgeStat({
                 )}
             </div>
 
-            <div className="mt-2 flex items-baseline justify-between gap-2 flex-wrap">
-                <div className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-white group-hover:text-indigo-200 transition-colors truncate">
+            <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
+                <div className="truncate text-xl font-extrabold tracking-tight text-white transition-colors group-hover:text-indigo-200 sm:text-2xl md:text-3xl">
                     {value}
                 </div>
                 {subValue && (
-                    <span className="text-xs font-medium text-slate-400 truncate">
+                    <span className="truncate text-xs font-medium text-slate-400">
                         {subValue}
                     </span>
                 )}
@@ -174,18 +183,31 @@ export const EdgeStat = memo(function EdgeStat({
                 <div className="mt-2.5 flex items-center gap-1.5 text-xs font-semibold">
                     <span
                         className={cn(
-                            'inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md',
-                            trend.direction === 'up' && 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20',
-                            trend.direction === 'down' && 'text-rose-400 bg-rose-500/10 border border-rose-500/20',
-                            trend.direction === 'neutral' && 'text-slate-400 bg-slate-800'
+                            'inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5',
+                            trend.direction === 'up' &&
+                                'border border-emerald-500/20 bg-emerald-500/10 text-emerald-400',
+                            trend.direction === 'down' &&
+                                'border border-rose-500/20 bg-rose-500/10 text-rose-400',
+                            trend.direction === 'neutral' &&
+                                'bg-slate-800 text-slate-400',
                         )}
                     >
-                        {trend.direction === 'up' && <TrendingUp className="w-3 h-3" />}
-                        {trend.direction === 'down' && <TrendingDown className="w-3 h-3" />}
-                        {trend.direction === 'neutral' && <Minus className="w-3 h-3" />}
+                        {trend.direction === 'up' && (
+                            <TrendingUp className="h-3 w-3" />
+                        )}
+                        {trend.direction === 'down' && (
+                            <TrendingDown className="h-3 w-3" />
+                        )}
+                        {trend.direction === 'neutral' && (
+                            <Minus className="h-3 w-3" />
+                        )}
                         <span>{trend.value}</span>
                     </span>
-                    {trend.label && <span className="text-slate-400 font-normal">{trend.label}</span>}
+                    {trend.label && (
+                        <span className="font-normal text-slate-400">
+                            {trend.label}
+                        </span>
+                    )}
                 </div>
             )}
         </div>
@@ -228,39 +250,48 @@ export const EdgeCard = memo(function EdgeCard({
                 getVariantClasses(variant),
                 getElevationClasses(elevation),
                 getAnimationClasses(animation),
-                glow && 'border-indigo-500/40 shadow-[0_0_25px_rgba(99,102,241,0.2)]',
-                className
+                glow &&
+                    'border-indigo-500/40 shadow-[0_0_25px_rgba(99,102,241,0.2)]',
+                className,
             )}
         >
             {(title || subtitle || icon || headerAction) && (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                     <div className="flex items-center gap-3">
                         {icon && (
-                            <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-indigo-400 shrink-0">
+                            <div className="shrink-0 rounded-xl border border-slate-700/60 bg-slate-800/80 p-2.5 text-indigo-400">
                                 {icon}
                             </div>
                         )}
                         <div>
                             {title && typeof title === 'string' ? (
-                                <h3 className="text-base font-bold text-white tracking-tight">{title}</h3>
+                                <h3 className="text-base font-bold tracking-tight text-white">
+                                    {title}
+                                </h3>
                             ) : (
                                 title
                             )}
                             {subtitle && typeof subtitle === 'string' ? (
-                                <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>
+                                <p className="mt-0.5 text-xs text-slate-400">
+                                    {subtitle}
+                                </p>
                             ) : (
                                 subtitle
                             )}
                         </div>
                     </div>
-                    {headerAction && <div className="self-start sm:self-auto shrink-0">{headerAction}</div>}
+                    {headerAction && (
+                        <div className="shrink-0 self-start sm:self-auto">
+                            {headerAction}
+                        </div>
+                    )}
                 </div>
             )}
 
             <div className="relative z-10">{children}</div>
 
             {footer && (
-                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+                <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3">
                     {footer}
                 </div>
             )}
@@ -288,24 +319,39 @@ export const EdgeHeader = memo(function EdgeHeader({
     className,
 }: EdgeHeaderProps) {
     return (
-        <div className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6', className)}>
+        <div
+            className={cn(
+                'mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center',
+                className,
+            )}
+        >
             <div className="flex items-start gap-3">
                 {icon && (
-                    <div className="p-3 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-400 shadow-lg shadow-indigo-500/10">
+                    <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 p-3 text-indigo-400 shadow-lg shadow-indigo-500/10">
                         {icon}
                     </div>
                 )}
                 <div>
                     <div className="flex items-center gap-2">
-                        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                        <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
                             {title}
                         </h1>
-                        {badge && <EdgeBadge text={badge} variant="neon" glow />}
+                        {badge && (
+                            <EdgeBadge text={badge} variant="neon" glow />
+                        )}
                     </div>
-                    {subtitle && <p className="text-sm text-slate-400 mt-1 max-w-2xl">{subtitle}</p>}
+                    {subtitle && (
+                        <p className="mt-1 max-w-2xl text-sm text-slate-400">
+                            {subtitle}
+                        </p>
+                    )}
                 </div>
             </div>
-            {actions && <div className="flex items-center gap-2 self-start sm:self-auto">{actions}</div>}
+            {actions && (
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                    {actions}
+                </div>
+            )}
         </div>
     );
 });
@@ -413,7 +459,13 @@ export const EdgeRenderer = memo(function EdgeRenderer({
             );
         default:
             return (
-                <div className={cn('p-4 rounded-xl', getVariantClasses(schema.variant), schema.className)}>
+                <div
+                    className={cn(
+                        'rounded-xl p-4',
+                        getVariantClasses(schema.variant),
+                        schema.className,
+                    )}
+                >
                     {schema.children || schema.title}
                 </div>
             );

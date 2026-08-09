@@ -45,10 +45,10 @@ class ExercisesController extends Controller
         // 1. Validate the incoming React data
         $validatedData = $request->validate([
             'name'         => 'required|string|max:255',
-            'category'     => 'required|string|max:255',
+            'category'     => 'required|string|in:Strength,Cardio,Flexibility,Core',
             'muscleGroup'  => 'required|string|max:255',
-            'equipment'    => 'required|string|max:255',
-            'difficulty'   => 'required|string|max:255',
+            'equipment'    => 'required|string|in:Barbell,Dumbbell,Machine,None',
+            'difficulty'   => 'required|string|in:Easy,Moderate,Hard',
             'instructions' => 'nullable|string|max:1000',
             'safety_info'  => 'nullable|string|max:1000',
             'restSeconds'  => 'required|string|max:10',
@@ -100,10 +100,10 @@ class ExercisesController extends Controller
     {
         $validatedData = $request->validate([
             'name'         => 'required|string|max:255',
-            'category'     => 'required|string|max:255',
+            'category'     => 'required|string|in:Strength,Cardio,Flexibility,Core',
             'muscleGroup'  => 'required|string|max:255',
-            'equipment'    => 'required|string|max:255',
-            'difficulty'   => 'required|string|max:255',
+            'equipment'    => 'required|string|in:Barbell,Dumbbell,Machine,None',
+            'difficulty'   => 'required|string|in:Easy,Moderate,Hard',
             'instructions' => 'nullable|string|max:1000',
             'safety_info'  => 'nullable|string|max:1000',
             'restSeconds'  => 'required|string|max:10',

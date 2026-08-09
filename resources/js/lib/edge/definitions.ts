@@ -1,4 +1,9 @@
-import type { EdgeThemeTokens, EdgeVariant, EdgeElevation, EdgeAnimation } from './types';
+import type {
+    EdgeThemeTokens,
+    EdgeVariant,
+    EdgeElevation,
+    EdgeAnimation,
+} from './types';
 
 export const EDGE_THEME: EdgeThemeTokens = {
     colors: {

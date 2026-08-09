@@ -135,6 +135,13 @@
 @layer base {
     * {
         @apply border-border;
+        touch-action: manipulation;
+    }
+
+    html, body {
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
     }
 
     body {

@@ -22,7 +22,14 @@ export interface WorkoutSession {
     templateId: number | null;
     startTime: string; // ISO String
     exercises: ActiveExercise[];
-    activeRest?: { exerciseIndex: number; setIndex: number; remaining: number; total: number; timestamp: number; isPaused?: boolean } | null;
+    activeRest?: {
+        exerciseIndex: number;
+        setIndex: number;
+        remaining: number;
+        total: number;
+        timestamp: number;
+        isPaused?: boolean;
+    } | null;
 }
 
 interface WorkoutContextType {
@@ -33,24 +40,44 @@ interface WorkoutContextType {
     startTime: string | null;
     exercises: ActiveExercise[];
     elapsedSeconds: number;
-    activeRest: { exerciseIndex: number; setIndex: number; remaining: number; total: number; isPaused?: boolean } | null;
-    startWorkout: (initialData?: {
-        name: string;
-        templateId: number | null;
-        exercises: {
-            exercise_id: number | null;
+    activeRest: {
+        exerciseIndex: number;
+        setIndex: number;
+        remaining: number;
+        total: number;
+        isPaused?: boolean;
+    } | null;
+    startWorkout: (
+        initialData?: {
             name: string;
-            sets: { weight: number | string; reps: number | string; unit?: string }[];
-            restSeconds?: number;
-        }[];
-    } | null) => void;
+            templateId: number | null;
+            exercises: {
+                exercise_id: number | null;
+                name: string;
+                sets: {
+                    weight: number | string;
+                    reps: number | string;
+                    unit?: string;
+                }[];
+                restSeconds?: number;
+            }[];
+        } | null,
+    ) => void;
     setIsExpanded: (expanded: boolean) => void;
     updateWorkoutName: (name: string) => void;
-    addActiveExercise: (exerciseId: number | null, name: string, restSeconds?: number) => void;
+    addActiveExercise: (
+        exerciseId: number | null,
+        name: string,
+        restSeconds?: number,
+    ) => void;
     removeActiveExercise: (exerciseIndex: number) => void;
     addActiveSet: (exerciseIndex: number) => void;
     removeActiveSet: (exerciseIndex: number, setIndex: number) => void;
-    updateActiveSet: (exerciseIndex: number, setIndex: number, fields: Partial<ActiveSet>) => void;
+    updateActiveSet: (
+        exerciseIndex: number,
+        setIndex: number,
+        fields: Partial<ActiveSet>,
+    ) => void;
     toggleSetCompleted: (exerciseIndex: number, setIndex: number) => void;
     updateExerciseRest: (exerciseIndex: number, seconds: number) => void;
     adjustActiveRest: (seconds: number) => void;
@@ -62,23 +89,22 @@ interface WorkoutContextType {
     finishWorkout: () => void;
 }
 
-
 const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined);
 
 function getDefaultWorkoutName(): string {
     const hour = new Date().getHours();
 
     if (hour >= 5 && hour < 12) {
-return 'Morning Workout';
-}
+        return 'Morning Workout';
+    }
 
     if (hour >= 12 && hour < 17) {
-return 'Afternoon Workout';
-}
+        return 'Afternoon Workout';
+    }
 
     if (hour >= 17 && hour < 22) {
-return 'Evening Workout';
-}
+        return 'Evening Workout';
+    }
 
     return 'Night Workout';
 }
@@ -100,7 +126,10 @@ function getInitialWorkout(): WorkoutSession | null {
                 return parsed;
             }
         } catch (e) {
-            console.error('Failed to parse active workout from localStorage', e);
+            console.error(
+                'Failed to parse active workout from localStorage',
+                e,
+            );
         }
     }
 
@@ -108,7 +137,9 @@ function getInitialWorkout(): WorkoutSession | null {
 }
 
 export function WorkoutProvider({ children }: { children: React.ReactNode }) {
-    const [initialWorkout] = useState<WorkoutSession | null>(() => getInitialWorkout());
+    const [initialWorkout] = useState<WorkoutSession | null>(() =>
+        getInitialWorkout(),
+    );
 
     const [pendingWorkout, setPendingWorkout] = useState<{
         initialData: {
@@ -117,7 +148,11 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
             exercises: {
                 exercise_id: number | null;
                 name: string;
-                sets: { weight: number | string; reps: number | string; unit?: string }[];
+                sets: {
+                    weight: number | string;
+                    reps: number | string;
+                    unit?: string;
+                }[];
                 restSeconds?: number;
             }[];
         } | null;
@@ -130,7 +165,11 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
             exercises: {
                 exercise_id: number | null;
                 name: string;
-                sets: { weight: number | string; reps: number | string; unit?: string }[];
+                sets: {
+                    weight: number | string;
+                    reps: number | string;
+                    unit?: string;
+                }[];
                 restSeconds?: number;
             }[];
         } | null;
@@ -139,12 +178,19 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     const [isActive, setIsActive] = useState(!!initialWorkout);
     const [isExpanded, setIsExpanded] = useState(false);
     const [name, setName] = useState(initialWorkout?.name || '');
-    const [templateId, setTemplateId] = useState<number | null>(initialWorkout?.templateId || null);
-    const [startTime, setStartTime] = useState<string | null>(initialWorkout?.startTime || null);
-    const [exercises, setExercises] = useState<ActiveExercise[]>(initialWorkout?.exercises || []);
+    const [templateId, setTemplateId] = useState<number | null>(
+        initialWorkout?.templateId || null,
+    );
+    const [startTime, setStartTime] = useState<string | null>(
+        initialWorkout?.startTime || null,
+    );
+    const [exercises, setExercises] = useState<ActiveExercise[]>(
+        initialWorkout?.exercises || [],
+    );
     const [elapsedSeconds, setElapsedSeconds] = useState(() => {
         if (initialWorkout?.startTime) {
-            const diffMs = Date.now() - new Date(initialWorkout.startTime).getTime();
+            const diffMs =
+                Date.now() - new Date(initialWorkout.startTime).getTime();
 
             return Math.max(0, Math.floor(diffMs / 1000));
         }
@@ -153,27 +199,41 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Active rest countdown state
-    const [activeRest, setActiveRest] = useState<{ exerciseIndex: number; setIndex: number; remaining: number; total: number; isPaused?: boolean } | null>(() => {
+    const [activeRest, setActiveRest] = useState<{
+        exerciseIndex: number;
+        setIndex: number;
+        remaining: number;
+        total: number;
+        isPaused?: boolean;
+    } | null>(() => {
         if (initialWorkout?.activeRest) {
             const savedRest = initialWorkout.activeRest;
 
             if (savedRest.isPaused) {
                 return {
                     exerciseIndex: savedRest.exerciseIndex,
-                    setIndex: savedRest.setIndex !== undefined ? savedRest.setIndex : 0,
+                    setIndex:
+                        savedRest.setIndex !== undefined
+                            ? savedRest.setIndex
+                            : 0,
                     remaining: savedRest.remaining,
                     total: savedRest.total,
                     isPaused: true,
                 };
             }
 
-            const elapsed = Math.floor((Date.now() - savedRest.timestamp) / 1000);
+            const elapsed = Math.floor(
+                (Date.now() - savedRest.timestamp) / 1000,
+            );
             const remaining = savedRest.remaining - elapsed;
 
             if (remaining > 0) {
                 return {
                     exerciseIndex: savedRest.exerciseIndex,
-                    setIndex: savedRest.setIndex !== undefined ? savedRest.setIndex : 0,
+                    setIndex:
+                        savedRest.setIndex !== undefined
+                            ? savedRest.setIndex
+                            : 0,
                     remaining,
                     total: savedRest.total,
                 };
@@ -197,16 +257,21 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
                 templateId,
                 startTime,
                 exercises,
-                activeRest: activeRest ? {
-                    exerciseIndex: activeRest.exerciseIndex,
-                    setIndex: activeRest.setIndex,
-                    remaining: activeRest.remaining,
-                    total: activeRest.total,
-                    isPaused: activeRest.isPaused,
-                    timestamp: Date.now(),
-                } : null,
+                activeRest: activeRest
+                    ? {
+                          exerciseIndex: activeRest.exerciseIndex,
+                          setIndex: activeRest.setIndex,
+                          remaining: activeRest.remaining,
+                          total: activeRest.total,
+                          isPaused: activeRest.isPaused,
+                          timestamp: Date.now(),
+                      }
+                    : null,
             };
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToStore));
+            localStorage.setItem(
+                LOCAL_STORAGE_KEY,
+                JSON.stringify(dataToStore),
+            );
         } else {
             localStorage.removeItem(LOCAL_STORAGE_KEY);
         }
@@ -224,7 +289,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
             const currentStartTime = stateRef.current.startTime;
 
             if (isActive && currentStartTime) {
-                const diffMs = Date.now() - new Date(currentStartTime).getTime();
+                const diffMs =
+                    Date.now() - new Date(currentStartTime).getTime();
                 setElapsedSeconds(Math.max(0, Math.floor(diffMs / 1000)));
             }
 
@@ -257,21 +323,29 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         };
     }, [isActive, startTime, hasActiveRest]);
 
-    const executeStartWorkout = (initialData?: {
-        name: string;
-        templateId: number | null;
-        exercises: {
-            exercise_id: number | null;
+    const executeStartWorkout = (
+        initialData?: {
             name: string;
-            sets: { weight: number | string; reps: number | string; unit?: string }[];
-            restSeconds?: number;
-        }[];
-    } | null) => {
+            templateId: number | null;
+            exercises: {
+                exercise_id: number | null;
+                name: string;
+                sets: {
+                    weight: number | string;
+                    reps: number | string;
+                    unit?: string;
+                }[];
+                restSeconds?: number;
+            }[];
+        } | null,
+    ) => {
         const defaultName = getDefaultWorkoutName();
         const workoutName = initialData?.name || defaultName;
         const nowStr = new Date().toISOString();
 
-        const activeExercises: ActiveExercise[] = (initialData?.exercises || []).map((ex) => ({
+        const activeExercises: ActiveExercise[] = (
+            initialData?.exercises || []
+        ).map((ex) => ({
             exercise_id: ex.exercise_id,
             name: ex.name,
             restSeconds: ex.restSeconds !== undefined ? ex.restSeconds : 120,
@@ -295,30 +369,44 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         toast.success(`Started "${workoutName}"!`);
     };
 
-    const startWorkout = (initialData?: {
-        name: string;
-        templateId: number | null;
-        exercises: {
-            exercise_id: number | null;
+    const startWorkout = (
+        initialData?: {
             name: string;
-            sets: { weight: number | string; reps: number | string; unit?: string }[];
-            restSeconds?: number;
-        }[];
-    } | null) => {
+            templateId: number | null;
+            exercises: {
+                exercise_id: number | null;
+                name: string;
+                sets: {
+                    weight: number | string;
+                    reps: number | string;
+                    unit?: string;
+                }[];
+                restSeconds?: number;
+            }[];
+        } | null,
+    ) => {
         if (isActive) {
-            setPendingWorkout({ initialData: initialData !== undefined ? initialData : null });
+            setPendingWorkout({
+                initialData: initialData !== undefined ? initialData : null,
+            });
 
             return;
         }
 
-        setConfirmWorkoutToStart({ initialData: initialData !== undefined ? initialData : null });
+        setConfirmWorkoutToStart({
+            initialData: initialData !== undefined ? initialData : null,
+        });
     };
 
     const updateWorkoutName = (newName: string) => {
         setName(newName);
     };
 
-    const addActiveExercise = (exerciseId: number | null, exerciseName: string, restSeconds?: number) => {
+    const addActiveExercise = (
+        exerciseId: number | null,
+        exerciseName: string,
+        restSeconds?: number,
+    ) => {
         setExercises((prev) => [
             ...prev,
             {
@@ -330,7 +418,6 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         ]);
         toast.message(`Added ${exerciseName} to workout`);
     };
-
 
     const removeActiveExercise = (exerciseIndex: number) => {
         const removed = exercises[exerciseIndex];
@@ -346,8 +433,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         setExercises((prev) =>
             prev.map((ex, idx) => {
                 if (idx !== exerciseIndex) {
-return ex;
-}
+                    return ex;
+                }
 
                 const lastSet = ex.sets[ex.sets.length - 1];
                 const newSet = {
@@ -361,7 +448,7 @@ return ex;
                     ...ex,
                     sets: [...ex.sets, newSet],
                 };
-            })
+            }),
         );
     };
 
@@ -369,35 +456,39 @@ return ex;
         setExercises((prev) =>
             prev.map((ex, idx) => {
                 if (idx !== exerciseIndex) {
-return ex;
-}
+                    return ex;
+                }
 
                 return {
                     ...ex,
                     sets: ex.sets.filter((_, sIdx) => sIdx !== setIndex),
                 };
-            })
+            }),
         );
     };
 
-    const updateActiveSet = (exerciseIndex: number, setIndex: number, fields: Partial<ActiveSet>) => {
+    const updateActiveSet = (
+        exerciseIndex: number,
+        setIndex: number,
+        fields: Partial<ActiveSet>,
+    ) => {
         setExercises((prev) =>
             prev.map((ex, idx) => {
                 if (idx !== exerciseIndex) {
-return ex;
-}
+                    return ex;
+                }
 
                 return {
                     ...ex,
                     sets: ex.sets.map((s, sIdx) => {
                         if (sIdx !== setIndex) {
-return s;
-}
+                            return s;
+                        }
 
                         return { ...s, ...fields };
                     }),
                 };
-            })
+            }),
         );
     };
 
@@ -409,11 +500,16 @@ return s;
         let exerciseName = '';
 
         if (currentSet && !currentSet.isFinished) {
-            restSec = exercise.restSeconds !== undefined ? exercise.restSeconds : 120;
+            restSec =
+                exercise.restSeconds !== undefined ? exercise.restSeconds : 120;
             exerciseName = exercise.name;
         } else if (currentSet && currentSet.isFinished) {
             // Unchecking: if there's an active rest timer for this specific set, clear it.
-            if (activeRest && activeRest.exerciseIndex === exerciseIndex && activeRest.setIndex === setIndex) {
+            if (
+                activeRest &&
+                activeRest.exerciseIndex === exerciseIndex &&
+                activeRest.setIndex === setIndex
+            ) {
                 setActiveRest(null);
                 toast.info('Rest timer stopped');
             }
@@ -457,7 +553,7 @@ return s;
                 }
 
                 return { ...ex, restSeconds: seconds };
-            })
+            }),
         );
         toast.message(`Updated rest time to ${seconds}s`);
     };
@@ -491,12 +587,20 @@ return s;
                         return ex;
                     }
 
-                    const currentRestSec = ex.restSeconds !== undefined ? ex.restSeconds : 120;
+                    const currentRestSec =
+                        ex.restSeconds !== undefined ? ex.restSeconds : 120;
 
-                    return { ...ex, restSeconds: Math.max(15, currentRestSec + seconds) };
-                })
+                    return {
+                        ...ex,
+                        restSeconds: Math.max(15, currentRestSec + seconds),
+                    };
+                }),
             );
-            toast.message(seconds > 0 ? `+${seconds}s added & saved to exercise` : `${seconds}s removed & saved to exercise`);
+            toast.message(
+                seconds > 0
+                    ? `+${seconds}s added & saved to exercise`
+                    : `${seconds}s removed & saved to exercise`,
+            );
         }
     };
 
@@ -514,7 +618,9 @@ return s;
     };
 
     const resetActiveRest = () => {
-        setActiveRest((prev) => (prev ? { ...prev, remaining: prev.total, isPaused: false } : null));
+        setActiveRest((prev) =>
+            prev ? { ...prev, remaining: prev.total, isPaused: false } : null,
+        );
     };
 
     const cancelWorkout = () => {
@@ -606,8 +712,8 @@ return s;
         >
             {children}
             {pendingWorkout && (
-                <div className="fixed inset-0 z-[150] flex items-center justify-center p-5 bg-neutral-955/80 bg-neutral-950/80 backdrop-blur-md">
-                    <div className="w-full max-w-sm rounded-3xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl text-center space-y-4">
+                <div className="bg-neutral-955/80 fixed inset-0 z-[150] flex items-center justify-center bg-neutral-950/80 p-5 backdrop-blur-md">
+                    <div className="w-full max-w-sm space-y-4 rounded-3xl border border-neutral-800 bg-neutral-900 p-6 text-center shadow-2xl">
                         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
                             <AlertTriangle className="h-6 w-6" />
                         </div>
@@ -615,14 +721,16 @@ return s;
                             <h3 className="text-base font-extrabold text-neutral-100">
                                 Start new workout?
                             </h3>
-                            <p className="text-xs text-neutral-400 leading-relaxed">
-                                You already have an active workout session in progress. Starting a new session will discard your current active workout.
+                            <p className="text-xs leading-relaxed text-neutral-400">
+                                You already have an active workout session in
+                                progress. Starting a new session will discard
+                                your current active workout.
                             </p>
                         </div>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setPendingWorkout(null)}
-                                className="flex-1 rounded-2xl border border-neutral-850 bg-neutral-800/40 py-2.5 text-xs font-bold text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100 transition-colors"
+                                className="border-neutral-850 flex-1 rounded-2xl border bg-neutral-800/40 py-2.5 text-xs font-bold text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
                             >
                                 Keep current
                             </button>
@@ -632,7 +740,7 @@ return s;
                                     setPendingWorkout(null);
                                     executeStartWorkout(data);
                                 }}
-                                className="flex-1 rounded-2xl bg-sky-500 py-2.5 text-xs font-bold text-white hover:bg-sky-600 transition-colors shadow-lg shadow-sky-500/10"
+                                className="flex-1 rounded-2xl bg-sky-500 py-2.5 text-xs font-bold text-white shadow-lg shadow-sky-500/10 transition-colors hover:bg-sky-600"
                             >
                                 Start new
                             </button>
@@ -641,8 +749,8 @@ return s;
                 </div>
             )}
             {confirmWorkoutToStart && (
-                <div className="fixed inset-0 z-[150] flex items-center justify-center p-5 bg-neutral-955/80 bg-neutral-950/80 backdrop-blur-md">
-                    <div className="w-full max-w-sm rounded-3xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl text-center space-y-4">
+                <div className="bg-neutral-955/80 fixed inset-0 z-[150] flex items-center justify-center bg-neutral-950/80 p-5 backdrop-blur-md">
+                    <div className="w-full max-w-sm space-y-4 rounded-3xl border border-neutral-800 bg-neutral-900 p-6 text-center shadow-2xl">
                         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-500/10 text-sky-500">
                             <Dumbbell className="h-6 w-6" />
                         </div>
@@ -650,8 +758,8 @@ return s;
                             <h3 className="text-base font-extrabold text-neutral-100">
                                 Start workout?
                             </h3>
-                            <p className="text-xs text-neutral-400 leading-relaxed">
-                                {confirmWorkoutToStart.initialData?.name 
+                            <p className="text-xs leading-relaxed text-neutral-400">
+                                {confirmWorkoutToStart.initialData?.name
                                     ? `Would you like to start the "${confirmWorkoutToStart.initialData.name}" session?`
                                     : 'Would you like to start an empty workout session?'}
                             </p>
@@ -659,17 +767,18 @@ return s;
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setConfirmWorkoutToStart(null)}
-                                className="flex-1 rounded-2xl border border-neutral-850 bg-neutral-800/40 py-2.5 text-xs font-bold text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100 transition-colors"
+                                className="border-neutral-850 flex-1 rounded-2xl border bg-neutral-800/40 py-2.5 text-xs font-bold text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={() => {
-                                    const data = confirmWorkoutToStart.initialData;
+                                    const data =
+                                        confirmWorkoutToStart.initialData;
                                     setConfirmWorkoutToStart(null);
                                     executeStartWorkout(data);
                                 }}
-                                className="flex-1 rounded-2xl bg-sky-500 py-2.5 text-xs font-bold text-white hover:bg-sky-600 transition-colors shadow-lg shadow-sky-500/10"
+                                className="flex-1 rounded-2xl bg-sky-500 py-2.5 text-xs font-bold text-white shadow-lg shadow-sky-500/10 transition-colors hover:bg-sky-600"
                             >
                                 Start
                             </button>

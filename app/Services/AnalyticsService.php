@@ -154,22 +154,27 @@ class AnalyticsService
             // ── 8. Weekly comparison deltas ───────────────────────────────────
             $comparison = $this->buildComparison($currentWeek, $previousWeek, $breakdown);
 
-            // ── 10. Contribution Calendar (GitHub-style) ────────────────────
+            // ── 10. Contribution Calendar (Monthly Grid) ─────────────────────
             $contributionCalendar = $this->buildContributionCalendar($allWorkouts);
 
+            // ── 11. Exercise Progress Data (Chronological Sessions) ────────────
+            $exerciseProgressData = $this->buildExerciseProgressData($allWorkouts);
+
             return [
-                'currentWeek'          => $this->stripExerciseMap($currentWeek),
-                'previousWeek'         => $this->stripExerciseMap($previousWeek),
-                'comparison'           => $comparison,
-                'exerciseBreakdown'    => $breakdown,
-                'weeklyGraph'          => $weeklyGraph,
-                'contributionCalendar' => $contributionCalendar,
-                'newExercises'         => array_keys(array_diff_key(
+                'currentWeek'                => $this->stripExerciseMap($currentWeek),
+                'previousWeek'               => $this->stripExerciseMap($previousWeek),
+                'comparison'                 => $comparison,
+                'exerciseBreakdown'          => $breakdown,
+                'weeklyGraph'                => $weeklyGraph,
+                'contributionCalendar'       => $contributionCalendar,
+                'exerciseProgressData'       => $exerciseProgressData,
+                'recentlyPerformedExercises' => $exerciseProgressData,
+                'newExercises'               => array_keys(array_diff_key(
                     $currentWeek['exerciseMap'],
                     $previousWeek['exerciseMap']
                 )),
-                'hasData'              => count($allWorkouts) > 0,
-                'hasTwoWeeks'          => count($currWeekWorkouts) > 0 && count($prevWeekWorkouts) > 0,
+                'hasData'                    => count($allWorkouts) > 0,
+                'hasTwoWeeks'                => count($currWeekWorkouts) > 0 && count($prevWeekWorkouts) > 0,
             ];
         } catch (Exception $e) {
             Log::error('AnalyticsService::getWeeklyAnalytics failed: ' . $e->getMessage());
@@ -430,29 +435,77 @@ class AnalyticsService
 
             if (!isset($dailyMap[$dateKey])) {
                 $dailyMap[$dateKey] = [
-                    'count'  => 0,
-                    'sets'   => 0,
-                    'volume' => 0.0,
+                    'count'    => 0,
+                    'sets'     => 0,
+                    'volume'   => 0.0,
+                    'duration' => 0,
+                    'workouts' => [],
                 ];
             }
 
             $dailyMap[$dateKey]['count']++;
 
+            $durationSeconds = ($workout->started_at && $workout->completed_at)
+                ? max(0, $workout->completed_at->diffInSeconds($workout->started_at))
+                : 0;
+
+            $dailyMap[$dateKey]['duration'] += $durationSeconds;
+
+            $wVolume = 0.0;
+            $wSetsCount = 0;
+            $exercisesSummary = [];
+
             foreach ($workout->exercises as $ex) {
+                $exSetsCount = 0;
+                $bestWeight = 0.0;
+                $bestReps = 0;
+
                 foreach ($ex->sets as $set) {
                     if ($set->is_completed || $workout->completed_at) {
-                        $dailyMap[$dateKey]['sets']++;
-                        $dailyMap[$dateKey]['volume'] += (float)($set->weight ?? 0) * (int)($set->reps ?? 0);
+                        $wSetsCount++;
+                        $exSetsCount++;
+                        $w = (float)($set->weight ?? 0);
+                        $r = (int)($set->reps ?? 0);
+                        $wVolume += $w * $r;
+
+                        if ($w > $bestWeight || ($w === $bestWeight && $r > $bestReps)) {
+                            $bestWeight = $w;
+                            $bestReps = $r;
+                        }
                     }
                 }
+
+                $exercisesSummary[] = [
+                    'name'      => $ex->exercise_name,
+                    'setsCount' => $exSetsCount,
+                    'bestSet'   => $bestWeight > 0 ? "{$bestWeight} kg × {$bestReps}" : "{$bestReps} reps",
+                ];
             }
+
+            $dailyMap[$dateKey]['sets'] += $wSetsCount;
+            $dailyMap[$dateKey]['volume'] += $wVolume;
+
+            $dailyMap[$dateKey]['workouts'][] = [
+                'id'           => $workout->id,
+                'name'         => $workout->name,
+                'templateName' => $workout->template ? $workout->template->name : null,
+                'startedAt'    => $workout->started_at ? $workout->started_at->toISOString() : null,
+                'completedAt'  => $workout->completed_at ? $workout->completed_at->toISOString() : null,
+                'duration'     => $durationSeconds,
+                'setsCount'    => $wSetsCount,
+                'volume'       => round($wVolume, 1),
+                'exercises'    => $exercisesSummary,
+            ];
         }
 
         $availableYears = array_keys($yearsSet);
         rsort($availableYears);
 
+        $minYear = min($availableYears);
         $endDate = $now->copy()->endOfWeek(Carbon::SUNDAY);
-        $startDate = $endDate->copy()->subWeeks(51)->startOfWeek(Carbon::SUNDAY);
+        $oneYearAgo = $now->copy()->subWeeks(51)->startOfWeek(Carbon::SUNDAY);
+        $earliestYearStart = Carbon::create($minYear, 1, 1)->startOfWeek(Carbon::SUNDAY);
+        $startDate = $oneYearAgo->lt($earliestYearStart) ? $oneYearAgo : $earliestYearStart;
 
         $days = [];
         $totalContributions = 0;
@@ -460,21 +513,27 @@ class AnalyticsService
         $cursor = $startDate->copy();
         while ($cursor->lte($endDate)) {
             $dateStr = $cursor->format('Y-m-d');
-            $stats = $dailyMap[$dateStr] ?? ['count' => 0, 'sets' => 0, 'volume' => 0.0];
+            $stats = $dailyMap[$dateStr] ?? [
+                'count'    => 0,
+                'sets'     => 0,
+                'volume'   => 0.0,
+                'duration' => 0,
+                'workouts' => [],
+            ];
 
             $setCount = $stats['sets'];
             $workoutCount = $stats['count'];
 
             if ($workoutCount === 0 && $setCount === 0) {
                 $level = 0;
-            } elseif ($setCount <= 3) {
-                $level = 1;
-            } elseif ($setCount <= 7) {
-                $level = 2;
-            } elseif ($setCount <= 12) {
-                $level = 3;
-            } else {
+            } elseif ($workoutCount >= 4 || $setCount >= 16) {
                 $level = 4;
+            } elseif ($workoutCount === 3 || $setCount >= 11) {
+                $level = 3;
+            } elseif ($workoutCount === 2 || $setCount >= 6) {
+                $level = 2;
+            } else {
+                $level = 1;
             }
 
             if ($setCount > 0 || $workoutCount > 0) {
@@ -482,11 +541,13 @@ class AnalyticsService
             }
 
             $days[] = [
-                'date'   => $dateStr,
-                'count'  => $workoutCount,
-                'sets'   => $setCount,
-                'volume' => round($stats['volume'], 1),
-                'level'  => $level,
+                'date'     => $dateStr,
+                'count'    => $workoutCount,
+                'sets'     => $setCount,
+                'volume'   => round($stats['volume'], 1),
+                'duration' => $stats['duration'],
+                'level'    => $level,
+                'workouts' => $stats['workouts'],
             ];
 
             $cursor->addDay();
@@ -498,5 +559,92 @@ class AnalyticsService
             'availableYears'     => $availableYears,
             'days'               => $days,
         ];
+    }
+
+    /**
+     * Build Exercise Progress data from user's completed workout history (chronological).
+     */
+    private function buildExerciseProgressData($allWorkouts): array
+    {
+        $exerciseProgressMap = [];
+
+        // $allWorkouts is ordered asc by completed_at (Oldest to Newest)
+        foreach ($allWorkouts as $workout) {
+            if (!$workout->completed_at) {
+                continue;
+            }
+
+            $dateObj = $workout->completed_at;
+            $isoDate = $dateObj->toIso8601String();
+            $dateLabel = $dateObj->format('M j');
+
+            foreach ($workout->exercises as $ex) {
+                $name = $ex->exercise_name;
+                $exerciseId = $ex->exercise_id;
+
+                $setsCount = 0;
+                $totalReps = 0;
+                $maxReps = 0;
+                $volume = 0.0;
+                $hasWeight = false;
+                $setsDetail = [];
+                $weightDetail = [];
+
+                foreach ($ex->sets as $set) {
+                    if (!$set->is_completed) {
+                        continue;
+                    }
+                    $setsCount++;
+                    $r = (int)($set->reps ?? 0);
+                    $w = (float)($set->weight ?? 0);
+
+                    $totalReps += $r;
+                    if ($r > $maxReps) {
+                        $maxReps = $r;
+                    }
+
+                    if ($w > 0) {
+                        $hasWeight = true;
+                        $volume += ($w * $r);
+                    }
+
+                    $setsDetail[] = $r;
+                    $weightDetail[] = $w;
+                }
+
+                if ($setsCount === 0) {
+                    continue;
+                }
+
+                if (!isset($exerciseProgressMap[$name])) {
+                    $exerciseProgressMap[$name] = [
+                        'exercise_id'  => $exerciseId,
+                        'name'         => $name,
+                        'isBodyweight' => true,
+                        'sessions'     => [],
+                    ];
+                }
+
+                if ($hasWeight) {
+                    $exerciseProgressMap[$name]['isBodyweight'] = false;
+                }
+
+                $exerciseProgressMap[$name]['sessions'][] = [
+                    'session_id'   => $workout->id,
+                    'workout_name' => $workout->name,
+                    'date'         => $dateLabel,
+                    'fullDate'     => $dateObj->format('Y-m-d'),
+                    'isoDate'      => $isoDate,
+                    'setsCount'    => $setsCount,
+                    'totalReps'    => $totalReps,
+                    'maxReps'      => $maxReps,
+                    'volume'       => round($volume, 1),
+                    'setsDetail'   => $setsDetail,
+                    'weightDetail' => $weightDetail,
+                ];
+            }
+        }
+
+        return array_values($exerciseProgressMap);
     }
 }
