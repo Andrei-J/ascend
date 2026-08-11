@@ -30,3 +30,8 @@ yarn-error.log
 
 # Credential files (keystores, private keys, etc.)
 /credentials/
+
+# Graphify knowledge graph & cache
+/graphify-out/
+.graphify*
+

@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import {
     Plus,
     FolderOpen,
@@ -12,9 +12,16 @@ import {
     X,
     AlertTriangle,
 } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useWorkout } from '@/hooks/use-workout';
 import { EdgeHeader, EdgeCard, EdgeBadge, EdgeButton } from '@/lib/edge/engine';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 interface TemplateExercise {
     exercise_id: number;
@@ -322,6 +329,37 @@ export default function WorkoutPage({
     const [isDeleting, setIsDeleting] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // Inline create-exercise modal state
+    const [isCreateExModalOpen, setIsCreateExModalOpen] = useState(false);
+    const {
+        data: exData,
+        setData: setExData,
+        post: postEx,
+        processing: exProcessing,
+        errors: exErrors,
+        reset: resetEx,
+    } = useForm({
+        name: '',
+        category: 'Strength',
+        muscleGroup: '',
+        equipment: 'None',
+        difficulty: 'Moderate',
+        instructions: '',
+        restSeconds: '2:00',
+    });
+
+    const submitCreateExercise = (e: React.FormEvent) => {
+        e.preventDefault();
+        postEx('/Exercises/create', {
+            onSuccess: () => {
+                setIsCreateExModalOpen(false);
+                resetEx();
+                // Reload the page data so the new exercise appears in the list
+                router.reload({ only: ['exercises'] });
+            },
+        });
+    };
+
     const { data, setData, post, put, processing, errors, reset, clearErrors } =
         useForm({
             name: '',
@@ -377,7 +415,7 @@ export default function WorkoutPage({
         window.location.href = `/Workout/delete/${deleteTarget.id}`;
     };
 
-    const addExercise = (exerciseId: number, name: string) => {
+    const addExercise = useCallback((exerciseId: number, name: string) => {
         let initialWeight = 60;
         let initialReps = 10;
 
@@ -401,7 +439,7 @@ export default function WorkoutPage({
                 sets: [{ weight: initialWeight, reps: initialReps, unit: 'kg' }],
             },
         ]);
-    };
+    }, [data.exercises, folders, myTemplates, setData]);
 
     const removeExercise = (index: number) => {
         setData(
@@ -460,9 +498,11 @@ export default function WorkoutPage({
 
     const filteredExercises = exercises
         .filter((ex) =>
-            ex.name.toLowerCase().includes(searchQuery.toLowerCase()),
+            ex.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            ex.muscleGroup.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            ex.category.toLowerCase().includes(searchQuery.toLowerCase()),
         )
-        .slice(0, 15);
+        .slice(0, 20);
 
     return (
         <>
@@ -471,7 +511,7 @@ export default function WorkoutPage({
             {deleteTarget && (
                 <div className="fixed inset-0 z-50 flex animate-in items-center justify-center p-4 duration-200 fade-in">
                     <div
-                        className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+                        className="absolute inset-0 bg-slate-950/80"
                         onClick={() => !isDeleting && setDeleteTarget(null)}
                     />
                     <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-rose-500/30 bg-slate-900 shadow-2xl">
@@ -515,9 +555,130 @@ export default function WorkoutPage({
                 </div>
             )}
 
+            {/* ── Inline Create Exercise Modal (z-[60] on top of template modal) ── */}
+            {isCreateExModalOpen && (
+                <div className="fixed inset-0 z-[110] flex flex-col items-center justify-center p-4 bg-slate-950/90">
+                    <div className="flex w-full max-w-lg flex-col rounded-3xl border border-white/10 bg-slate-900 shadow-2xl" style={{ maxHeight: '90dvh' }}>
+                        <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-slate-950/50 p-5">
+                            <div className="flex items-center gap-2">
+                                <Dumbbell className="h-5 w-5 text-indigo-400" />
+                                <h2 className="text-lg font-bold text-white">Create Custom Exercise</h2>
+                            </div>
+                            <button
+                                onClick={() => { setIsCreateExModalOpen(false); resetEx(); }}
+                                className="cursor-pointer text-slate-400 transition-colors hover:text-white"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <form
+                            onSubmit={submitCreateExercise}
+                            className="flex flex-1 flex-col overflow-hidden"
+                        >
+                            <div className="flex-1 space-y-4 overflow-y-auto p-6">
+                                <div>
+                                    <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">Exercise Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={exData.name}
+                                        onChange={(e) => setExData('name', e.target.value)}
+                                        placeholder="e.g. Incline DB Bench Press"
+                                        className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 py-2 text-sm text-white outline-none placeholder:text-slate-600 focus:border-indigo-500"
+                                    />
+                                    {exErrors.name && <span className="mt-1 text-xs text-rose-400">{exErrors.name}</span>}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">Category</label>
+                                        <Select value={exData.category} onValueChange={(val) => setExData('category', val)}>
+                                            <SelectTrigger className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 text-xs font-semibold text-white outline-none focus:border-indigo-500">
+                                                <SelectValue placeholder="Category" />
+                                            </SelectTrigger>
+                                            <SelectContent className="z-[70] border-white/10 bg-slate-900 shadow-2xl">
+                                                {['Strength','Cardio','Flexibility','Core'].map(v => (
+                                                    <SelectItem key={v} value={v} className="cursor-pointer text-xs text-slate-200 focus:bg-indigo-500/20 focus:text-indigo-200">{v}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">Equipment</label>
+                                        <Select value={exData.equipment} onValueChange={(val) => setExData('equipment', val)}>
+                                            <SelectTrigger className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 text-xs font-semibold text-white outline-none focus:border-indigo-500">
+                                                <SelectValue placeholder="Equipment" />
+                                            </SelectTrigger>
+                                            <SelectContent className="z-[70] border-white/10 bg-slate-900 shadow-2xl">
+                                                {['Barbell','Dumbbell','Machine','Bodyweight','Cable','Kettlebell','None'].map(v => (
+                                                    <SelectItem key={v} value={v} className="cursor-pointer text-xs text-slate-200 focus:bg-indigo-500/20 focus:text-indigo-200">{v}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">Muscle Group</label>
+                                        <input
+                                            type="text"
+                                            value={exData.muscleGroup}
+                                            onChange={(e) => setExData('muscleGroup', e.target.value)}
+                                            placeholder="e.g. Chest, Triceps"
+                                            className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 py-2 text-sm text-white outline-none placeholder:text-slate-600 focus:border-indigo-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">Difficulty</label>
+                                        <Select value={exData.difficulty} onValueChange={(val) => setExData('difficulty', val)}>
+                                            <SelectTrigger className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 text-xs font-semibold text-white outline-none focus:border-indigo-500">
+                                                <SelectValue placeholder="Difficulty" />
+                                            </SelectTrigger>
+                                            <SelectContent className="z-[70] border-white/10 bg-slate-900 shadow-2xl">
+                                                {['Easy','Moderate','Hard'].map(v => (
+                                                    <SelectItem key={v} value={v} className="cursor-pointer text-xs text-slate-200 focus:bg-indigo-500/20 focus:text-indigo-200">{v}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">Default Rest Timer</label>
+                                    <input
+                                        type="text"
+                                        value={exData.restSeconds}
+                                        onChange={(e) => setExData('restSeconds', e.target.value)}
+                                        placeholder="2:00"
+                                        className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 py-2 text-sm text-white outline-none placeholder:text-slate-600 focus:border-indigo-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">Movement Instructions</label>
+                                    <textarea
+                                        value={exData.instructions}
+                                        onChange={(e) => setExData('instructions', e.target.value)}
+                                        placeholder="Describe execution cues..."
+                                        className="h-20 w-full resize-none rounded-xl border border-white/10 bg-slate-950/60 p-3 text-xs text-white outline-none placeholder:text-slate-600 focus:border-indigo-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="sticky bottom-0 z-20 flex shrink-0 justify-end gap-3 border-t border-white/10 bg-slate-950 px-6 py-4 shadow-2xl">
+                                <EdgeButton variant="subtle" type="button" onClick={() => { setIsCreateExModalOpen(false); resetEx(); }}>Cancel</EdgeButton>
+                                <EdgeButton variant="gradient" type="submit" loading={exProcessing}>Save Exercise</EdgeButton>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex animate-in items-center justify-center p-4 pt-12 sm:p-6 bg-slate-950/85 backdrop-blur-md duration-200 fade-in">
-                    <div className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl">
+                <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-slate-950/90">
+                    <div className="flex w-full max-w-2xl flex-col rounded-3xl border border-white/10 bg-slate-900 shadow-2xl" style={{ maxHeight: '90dvh' }}>
                         <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-slate-950/50 p-5">
                             <div className="flex items-center gap-2">
                                 <Dumbbell className="h-5 w-5 text-indigo-400" />
@@ -751,12 +912,13 @@ export default function WorkoutPage({
                                     <label className="text-xs font-bold tracking-wider text-slate-400 uppercase">
                                         Add Exercise from Library
                                     </label>
-                                    <a
-                                        href="/Exercises"
-                                        className="text-xs font-bold text-indigo-400 transition-colors hover:text-indigo-300"
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsCreateExModalOpen(true)}
+                                        className="cursor-pointer text-xs font-bold text-indigo-400 transition-colors hover:text-indigo-300"
                                     >
                                         + Create Custom Exercise
-                                    </a>
+                                    </button>
                                 </div>
                                 <input
                                     type="text"
@@ -769,24 +931,26 @@ export default function WorkoutPage({
                                 />
 
                                 <div className="flex max-h-44 flex-col gap-1 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/40 p-2">
-                                    {filteredExercises.map((ex) => (
-                                        <button
-                                            key={ex.id}
-                                            type="button"
-                                            onClick={() => {
-                                                addExercise(ex.id, ex.name);
-                                                setSearchQuery('');
-                                            }}
-                                            className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-slate-300 transition-colors hover:bg-indigo-500/20 hover:text-white"
-                                        >
-                                            <span className="font-semibold">
-                                                {ex.name}
-                                            </span>
-                                            <span className="text-[10px] font-bold tracking-wider text-indigo-400 uppercase">
-                                                {ex.category}
-                                            </span>
-                                        </button>
-                                    ))}
+                                    {filteredExercises.length > 0 ? (
+                                        filteredExercises.map((ex) => (
+                                            <button
+                                                key={ex.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    addExercise(ex.id, ex.name);
+                                                    setSearchQuery('');
+                                                }}
+                                                className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-slate-300 transition-colors hover:bg-indigo-500/20 hover:text-white"
+                                            >
+                                                <span className="font-semibold">{ex.name}</span>
+                                                <span className="text-[10px] font-bold tracking-wider text-indigo-400 uppercase">{ex.category}</span>
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <p className="py-4 text-center text-xs text-slate-500">
+                                            {searchQuery ? 'No exercises match your search.' : 'No exercises in library yet.'}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </form>

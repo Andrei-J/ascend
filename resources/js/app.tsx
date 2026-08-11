@@ -44,3 +44,17 @@ createInertiaApp({
 
 // This will set light / dark mode on load...
 initializeTheme();
+
+// Fix mobile viewport height (--vh) so modals respect the visible area
+// when the Android soft keyboard is open inside NativePHP WebView.
+if (typeof window !== 'undefined') {
+    const setVh = () => {
+        const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        document.documentElement.style.setProperty('--vh', `${h * 0.01}px`);
+    };
+    setVh();
+    window.addEventListener('resize', setVh, { passive: true });
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', setVh, { passive: true } as any);
+    }
+}

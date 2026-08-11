@@ -160,7 +160,7 @@ export default function Exercise({
             {deleteTarget && (
                 <div className="fixed inset-0 z-50 flex animate-in items-center justify-center p-4 duration-200 fade-in">
                     <div
-                        className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+                        className="absolute inset-0 bg-slate-950/80"
                         onClick={() => !isDeleting && setDeleteTarget(null)}
                     />
                     <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-rose-500/30 bg-slate-900 shadow-2xl">
@@ -206,7 +206,7 @@ export default function Exercise({
 
             {/* ── Create / Edit Modal ── */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex animate-in items-center justify-center p-4 pt-12 sm:p-6 bg-slate-950/85 backdrop-blur-md duration-200 fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pt-12 sm:p-6 bg-slate-950/90">
                     <div className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl">
                         <div className="flex items-center justify-between border-b border-white/10 bg-slate-950/50 p-5">
                             <div className="flex items-center gap-2">
@@ -458,7 +458,6 @@ export default function Exercise({
                 {/* ── EDGE Page Header ── */}
                 <EdgeHeader
                     title="Exercise Directory"
-                    subtitle="Explore, search, and manage your custom movements catalog."
                     icon={<Dumbbell className="h-7 w-7 text-indigo-400" />}
                 />
 
