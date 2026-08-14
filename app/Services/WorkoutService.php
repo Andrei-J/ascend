@@ -212,14 +212,59 @@ class WorkoutService
                         ]);
 
                         // 4. Add sets
+                        $savedSets = [];
                         if (!empty($item['sets']) && is_array($item['sets'])) {
                             foreach ($item['sets'] as $setIndex => $set) {
+                                $weightVal = isset($set['weight']) && $set['weight'] !== '' ? (float)$set['weight'] : null;
+                                $repsVal   = isset($set['reps']) && $set['reps'] !== '' ? (int)$set['reps'] : null;
+                                $hasValues = ($weightVal !== null && $weightVal > 0) || ($repsVal !== null && $repsVal > 0);
+                                $isCompleted = !empty($set['is_completed']) || !empty($set['isFinished']) || $hasValues;
+
                                 $workoutExercise->sets()->create([
                                     'set_number'   => $setIndex + 1,
-                                    'weight'       => isset($set['weight']) && $set['weight'] !== '' ? (float)$set['weight'] : null,
-                                    'reps'         => isset($set['reps']) && $set['reps'] !== '' ? (int)$set['reps'] : null,
-                                    'is_completed' => !empty($set['is_completed']) || !empty($set['isFinished']),
+                                    'weight'       => $weightVal,
+                                    'reps'         => $repsVal,
+                                    'is_completed' => $isCompleted,
                                 ]);
+
+                                if ($hasValues || $isCompleted) {
+                                    $savedSets[] = [
+                                        'weight' => $weightVal ?? 0,
+                                        'reps'   => $repsVal ?? 0,
+                                    ];
+                                }
+                            }
+                        }
+
+                        // 5. Persist into user_exercise_saved_sets table for instant dynamic lookup
+                        if (!empty($savedSets)) {
+                            $exerciseId = $item['exercise_id'] ?? null;
+                            $exerciseName = $item['name'] ?? 'Unknown Exercise';
+
+                            \App\Models\UserExerciseSavedSet::updateOrCreate(
+                                [
+                                    'user_id'       => $userId,
+                                    'exercise_name' => $exerciseName,
+                                ],
+                                [
+                                    'exercise_id'    => $exerciseId,
+                                    'sets'           => $savedSets,
+                                    'last_logged_at' => now(),
+                                ]
+                            );
+
+                            if ($exerciseId) {
+                                \App\Models\UserExerciseSavedSet::updateOrCreate(
+                                    [
+                                        'user_id'     => $userId,
+                                        'exercise_id' => $exerciseId,
+                                    ],
+                                    [
+                                        'exercise_name'  => $exerciseName,
+                                        'sets'           => $savedSets,
+                                        'last_logged_at' => now(),
+                                    ]
+                                );
                             }
                         }
                     }
@@ -234,14 +279,29 @@ class WorkoutService
     }
 
     /**
-     * Get completed workouts formatted for history page.
+     * Get completed workouts formatted for history page with pagination and optional date filter.
      */
-    public function getCompletedWorkoutsForHistory(int $userId)
+    public function getCompletedWorkoutsForHistory(int $userId, int $page = 1, int $perPage = 5, ?int $month = null, ?int $year = null)
     {
         try {
-            $workouts = $this->workoutRepository->getCompletedWorkoutsForUser($userId);
+            $offset = ($page - 1) * $perPage;
 
-            return $workouts->map(function ($w) {
+            $query = \App\Models\Workout::with(['exercises.sets', 'template'])
+                ->where('user_id', $userId)
+                ->whereNotNull('completed_at')
+                ->orderBy('completed_at', 'desc');
+
+            if ($month && $year) {
+                $query->whereMonth('completed_at', $month)
+                      ->whereYear('completed_at', $year);
+            } elseif ($year) {
+                $query->whereYear('completed_at', $year);
+            }
+
+            $total  = $query->count();
+            $workouts = $query->offset($offset)->limit($perPage)->get();
+
+            $mapped = $workouts->map(function ($w) {
                 return [
                     'id'           => $w->id,
                     'name'         => $w->name,
@@ -266,6 +326,15 @@ class WorkoutService
                     })->toArray(),
                 ];
             });
+
+            return [
+                'data'    => $mapped,
+                'total'   => $total,
+                'page'    => $page,
+                'perPage' => $perPage,
+                'hasMore' => ($offset + $perPage) < $total,
+            ];
+
         } catch (Exception $e) {
             Log::error('Failed to get completed workouts: ' . $e->getMessage());
             throw new Exception('An error occurred while loading your history.');

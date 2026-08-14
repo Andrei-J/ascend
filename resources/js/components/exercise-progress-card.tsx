@@ -236,7 +236,7 @@ export default function ExerciseProgressCard({
                         <SelectTrigger className="h-10 w-full min-w-[200px] rounded-xl border border-indigo-500/30 bg-slate-900/90 px-3.5 text-xs font-bold text-indigo-200 outline-none transition-all hover:border-indigo-400 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 cursor-pointer shadow-lg">
                             <SelectValue placeholder="Select exercise..." />
                         </SelectTrigger>
-                        <SelectContent className="z-[60] border-white/10 bg-slate-900 shadow-2xl backdrop-blur-xl">
+                        <SelectContent position="popper" sideOffset={4} className="z-[60] max-h-64 overflow-y-auto border-white/10 bg-slate-900 shadow-2xl backdrop-blur-xl">
                             {exerciseProgressData.map((ex) => (
                                 <SelectItem
                                     key={ex.name}
@@ -272,7 +272,7 @@ export default function ExerciseProgressCard({
                             <button
                                 type="button"
                                 onClick={() => setMetric('totalReps')}
-                                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors duration-150 cursor-pointer ${
                                     metric === 'totalReps'
                                         ? 'bg-indigo-500 text-white shadow-md'
                                         : 'text-slate-400 hover:text-white'
@@ -283,7 +283,7 @@ export default function ExerciseProgressCard({
                             <button
                                 type="button"
                                 onClick={() => setMetric('maxReps')}
-                                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors duration-150 cursor-pointer ${
                                     metric === 'maxReps'
                                         ? 'bg-indigo-500 text-white shadow-md'
                                         : 'text-slate-400 hover:text-white'
@@ -295,7 +295,7 @@ export default function ExerciseProgressCard({
                                 <button
                                     type="button"
                                     onClick={() => setMetric('volume')}
-                                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors duration-150 cursor-pointer ${
                                         metric === 'volume'
                                             ? 'bg-indigo-500 text-white shadow-md'
                                             : 'text-slate-400 hover:text-white'
@@ -320,7 +320,10 @@ export default function ExerciseProgressCard({
 
                     {/* Main Line Graph SVG */}
                     {graphData && (
-                        <div className="relative w-full rounded-2xl border border-white/5 bg-slate-950/70 p-3 pt-5 backdrop-blur-sm">
+                        <div
+                            className="relative w-full rounded-2xl border border-white/5 bg-slate-950/90 p-3 pt-5 [transform:translateZ(0)]"
+                            onMouseLeave={() => setHoveredPointIndex(null)}
+                        >
                             <svg
                                 viewBox={`0 0 ${graphData.width} ${graphData.height}`}
                                 className="w-full h-auto overflow-visible"
@@ -397,22 +400,18 @@ export default function ExerciseProgressCard({
 
                                     return (
                                         <g key={i}>
-                                            {/* Pulse Ring on Hover */}
-                                            {isHovered && (
-                                                <circle
-                                                    cx={pt.x}
-                                                    cy={pt.y}
-                                                    r="10"
-                                                    className="fill-indigo-500/30 animate-ping"
-                                                />
-                                            )}
                                             <circle
                                                 cx={pt.x}
                                                 cy={pt.y}
-                                                r={isHovered ? '7' : '5'}
-                                                className="fill-indigo-400 stroke-slate-900 stroke-2 cursor-pointer transition-all duration-200 hover:fill-rose-400"
-                                                onMouseEnter={() => setHoveredPointIndex(i)}
-                                                onMouseLeave={() => setHoveredPointIndex(null)}
+                                                r="5"
+                                                className={`stroke-slate-900 stroke-2 cursor-pointer transition-colors duration-150 ${
+                                                    isHovered ? 'fill-rose-400' : 'fill-indigo-400'
+                                                }`}
+                                                onMouseEnter={() =>
+                                                    setHoveredPointIndex((prev) =>
+                                                        prev === i ? prev : i,
+                                                    )
+                                                }
                                                 onClick={() => setHoveredPointIndex(i)}
                                             />
                                             {/* X-Axis Date Labels */}

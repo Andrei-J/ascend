@@ -57,28 +57,28 @@ export const EDGE_THEME: EdgeThemeTokens = {
 export function getVariantClasses(variant: EdgeVariant = 'default'): string {
     switch (variant) {
         case 'glass':
-            return 'bg-slate-900/60 backdrop-blur-xl border border-white/10 text-white shadow-xl hover:border-white/20 transition-all duration-300';
+            return 'bg-slate-900/90 backdrop-blur-md border border-white/10 text-white shadow-xl [transform:translateZ(0)] hover:border-white/20 transition-[border-color,box-shadow] duration-200';
         case 'neon':
-            return 'bg-slate-900/90 border border-indigo-500/50 text-white shadow-[0_0_20px_rgba(99,102,241,0.25)] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] transition-all duration-300';
+            return 'bg-slate-900/90 border border-indigo-500/50 text-white shadow-[0_0_20px_rgba(99,102,241,0.25)] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] transition-[shadow,border-color] duration-200';
         case 'gradient':
-            return 'bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 border border-white/20 transition-all duration-300';
+            return 'bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 border border-white/20 transition-[shadow,border-color] duration-200';
         case 'accent':
-            return 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 transition-all duration-300';
+            return 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 transition-colors duration-200';
         case 'success':
-            return 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-all duration-300';
+            return 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-colors duration-200';
         case 'warning':
-            return 'bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 transition-all duration-300';
+            return 'bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 transition-colors duration-200';
         case 'danger':
-            return 'bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 transition-all duration-300';
+            return 'bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 transition-colors duration-200';
         case 'subtle':
-            return 'bg-slate-800/40 border border-slate-700/50 text-slate-300 hover:bg-slate-800/70 transition-all duration-200';
+            return 'bg-slate-800/40 border border-slate-700/50 text-slate-300 hover:bg-slate-800/70 transition-colors duration-200';
         case 'outline':
-            return 'bg-transparent border border-slate-700 text-slate-200 hover:border-indigo-500/50 hover:text-white transition-all duration-200';
+            return 'bg-transparent border border-slate-700 text-slate-200 hover:border-indigo-500/50 hover:text-white transition-colors duration-200';
         case 'ghost':
-            return 'bg-transparent text-slate-400 hover:text-white hover:bg-white/5 transition-all duration-200';
+            return 'bg-transparent text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-200';
         case 'default':
         default:
-            return 'bg-slate-900/80 border border-slate-800 text-slate-100 shadow-md hover:border-slate-700 transition-all duration-200';
+            return 'bg-slate-900/80 border border-slate-800 text-slate-100 shadow-md hover:border-slate-700 transition-colors duration-200';
     }
 }
 

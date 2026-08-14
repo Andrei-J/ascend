@@ -20,8 +20,8 @@ class ExercisesController extends Controller
      */
     public function index()
     {
-        // Fetch the exercises from the service layer
-        $exercises = $this->exerciseService->getExercisesForDashboard();
+        // Fetch the exercises from the service layer with user's last performed metrics
+        $exercises = $this->exerciseService->getExercisesForDashboard(auth()->id());
 
         // Pass the exercises into your React component as a prop
         return Inertia::render('ExercisesPage/index', [
@@ -47,7 +47,7 @@ class ExercisesController extends Controller
             'name'         => 'required|string|max:255',
             'category'     => 'required|string|in:Strength,Cardio,Flexibility,Core',
             'muscleGroup'  => 'required|string|max:255',
-            'equipment'    => 'required|string|in:Barbell,Dumbbell,Machine,None',
+            'equipment'    => 'required|string|in:Barbell,Dumbbell,Machine,Bodyweight,Cable,Kettlebell,None,Other',
             'difficulty'   => 'required|string|in:Easy,Moderate,Hard',
             'instructions' => 'nullable|string|max:1000',
             'safety_info'  => 'nullable|string|max:1000',
@@ -102,7 +102,7 @@ class ExercisesController extends Controller
             'name'         => 'required|string|max:255',
             'category'     => 'required|string|in:Strength,Cardio,Flexibility,Core',
             'muscleGroup'  => 'required|string|max:255',
-            'equipment'    => 'required|string|in:Barbell,Dumbbell,Machine,None',
+            'equipment'    => 'required|string|in:Barbell,Dumbbell,Machine,Bodyweight,Cable,Kettlebell,None,Other',
             'difficulty'   => 'required|string|in:Easy,Moderate,Hard',
             'instructions' => 'nullable|string|max:1000',
             'safety_info'  => 'nullable|string|max:1000',

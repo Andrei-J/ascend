@@ -26,7 +26,7 @@ class WorkoutController extends Controller
     {
         $userId = auth()->id();
         $workoutTemplates = $this->workoutService->getWorkoutTemplatesForDashboard($userId);
-        $exercises = $this->exerciseService->getExercisesForDashboard();
+        $exercises = $this->exerciseService->getExercisesForDashboard($userId);
 
         return inertia('workoutPage/index', [
             'folders' => $workoutTemplates['folders'],
@@ -162,9 +162,21 @@ class WorkoutController extends Controller
     public function history(Request $request)
     {
         try {
-            $history = $this->workoutService->getCompletedWorkoutsForHistory(auth()->id());
+            $page  = max(1, (int) $request->query('page', 1));
+            $month = $request->query('month') ? (int) $request->query('month') : null;
+            $year  = $request->query('year')  ? (int) $request->query('year')  : null;
+
+            $result = $this->workoutService->getCompletedWorkoutsForHistory(
+                auth()->id(), $page, 5, $month, $year
+            );
+
             return inertia('historyPage/index', [
-                'history' => $history,
+                'history'       => $result['data'],
+                'historyTotal'  => $result['total'],
+                'historyHasMore'=> $result['hasMore'],
+                'historyPage'   => $result['page'],
+                'filterMonth'   => $month,
+                'filterYear'    => $year,
             ]);
         } catch (Exception $e) {
             abort(500, $e->getMessage());

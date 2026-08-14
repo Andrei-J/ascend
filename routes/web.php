@@ -28,7 +28,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/Workout/delete/{id}', [WorkoutController::class, 'destroy'])->name('workout.delete');
     Route::post('/Workout/session', [WorkoutController::class, 'logSession'])->name('workout.session.log');
     Route::get('/api/exercises', function () {
-        return response()->json(app(\App\Services\ExerciseService::class)->getExercisesForDashboard());
+        return response()->json(app(\App\Services\ExerciseService::class)->getExercisesForDashboard(auth()->id()))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     })->name('api.exercises');
     Route::get('/History', [WorkoutController::class, 'history'])->name('history');
     Route::get('/Analytics', function () {

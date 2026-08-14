@@ -35,6 +35,9 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $appVersion = config('nativephp.version', env('NATIVEPHP_APP_VERSION', '1.0.1'));
+        $versionCode = config('nativephp.version_code', env('NATIVEPHP_APP_VERSION_CODE', 12));
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -42,6 +45,11 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'appVersion' => [
+                'version' => (string) $appVersion,
+                'version_code' => (int) $versionCode,
+                'build_id' => file_exists(base_path('.version')) ? trim(file_get_contents(base_path('.version'))) : "{$appVersion}b{$versionCode}",
+            ],
         ];
     }
 }

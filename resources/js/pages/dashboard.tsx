@@ -297,7 +297,7 @@ export default function Dashboard({
         <>
             <Head title="Dashboard" />
 
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] md:p-8 md:pb-12">
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] md:p-8 md:pb-12 [transform:translateZ(0)]">
                 <EdgeHeader
                     title="Dashboard"
                     subtitle="Your workout performance overview — track, compare, and elevate your fitness gains."

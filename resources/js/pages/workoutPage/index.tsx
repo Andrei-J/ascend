@@ -291,14 +291,43 @@ export default function WorkoutPage({
 
     const { startWorkout } = useWorkout();
 
-    const handleStartTemplate = (template: Template) => {
+    const handleStartTemplate = async (template: Template) => {
+        let currentExercises: any[] = exercises;
+        try {
+            const res = await fetch(`/api/exercises?t=${Date.now()}`, {
+                headers: { 'Cache-Control': 'no-cache' },
+            });
+            if (res.ok) {
+                const fresh = await res.json();
+                if (Array.isArray(fresh) && fresh.length > 0) {
+                    currentExercises = fresh;
+                }
+            }
+        } catch {
+            // Fallback to prop exercises if network fails
+        }
+
         const mapped = template.rawExercises.map((rawEx) => {
-            const match = exercises.find((ex) => ex.id === rawEx.exercise_id);
+            const match = currentExercises.find(
+                (ex: any) => ex.id === rawEx.exercise_id,
+            );
+
+            const lastPerformed = (match as any)?.lastPerformed || rawEx.sets;
+            const previousSummary = (match as any)?.previousSummary || null;
 
             return {
                 exercise_id: rawEx.exercise_id,
                 name: match ? match.name : 'Unknown Exercise',
-                sets: rawEx.sets,
+                sets: rawEx.sets.map((s, sIdx) => {
+                    const prevMatch = lastPerformed && lastPerformed[sIdx];
+                    return {
+                        weight: prevMatch ? prevMatch.weight : s.weight,
+                        reps: prevMatch ? prevMatch.reps : s.reps,
+                        unit: s.unit || 'kg',
+                    };
+                }),
+                previousSets: lastPerformed,
+                previousSummary: previousSummary,
             };
         });
 

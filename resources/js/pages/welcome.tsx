@@ -16,7 +16,10 @@ export default function Welcome({
 }: {
     canRegister?: boolean;
 }) {
-    const { auth } = usePage().props;
+    const { auth, appVersion } = usePage<{
+        auth: any;
+        appVersion?: { version: string; version_code: number; build_id: string };
+    }>().props;
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
@@ -238,6 +241,19 @@ export default function Welcome({
                         © 2026 Ascend Fitness. Built with NativePHP &
                         Inertia.js.
                     </p>
+                    {appVersion && (
+                        <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-950/40 px-3 py-1 text-[11px] font-mono text-indigo-300">
+                            <span>Version: {appVersion.version}</span>
+                            <span className="text-indigo-500">•</span>
+                            <span>Version Code: {appVersion.version_code}</span>
+                            {appVersion.build_id && (
+                                <>
+                                    <span className="text-indigo-500">•</span>
+                                    <span>Build: {appVersion.build_id}</span>
+                                </>
+                            )}
+                        </div>
+                    )}
                 </footer>
             </div>
         </>

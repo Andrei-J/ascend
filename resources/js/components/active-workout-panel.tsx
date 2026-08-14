@@ -11,10 +11,18 @@ import {
     Dumbbell,
     Timer,
 } from 'lucide-react';
-import { useState } from 'react';
+import { router } from '@inertiajs/react';
+import { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { useWorkout } from '@/hooks/use-workout';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 // ─── Rest Timer Modal ───────────────────────────────────────────────────────
 
@@ -55,8 +63,8 @@ function RestTimerModal({
     const mins = Math.floor(remaining / 60);
     const secs = remaining % 60;
 
-    const ringColor = '#84cc16'; // lime-500
-    const glowColor = 'rgba(132,204,22,0.15)';
+    const ringColor = '#a78bfa'; // violet-400
+    const glowColor = 'rgba(167,139,250,0.18)';
 
     const formattedTimer = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 
@@ -77,27 +85,27 @@ function RestTimerModal({
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             {/* Blurred backdrop */}
             <div
-                className="absolute inset-0 bg-neutral-950/80 backdrop-blur-md"
+                className="absolute inset-0 bg-neutral-950/85 backdrop-blur-md"
                 onClick={onSkip}
             />
 
             {/* Panel */}
             <div
-                className="relative z-10 w-full max-w-sm rounded-3xl border border-emerald-950/40 bg-[#0c1917] px-6 pt-6 pb-8 text-neutral-100 shadow-2xl"
+                className="relative z-10 w-full max-w-sm rounded-3xl border border-violet-900/40 bg-[#0d0d1f] px-6 pt-6 pb-8 text-neutral-100 shadow-2xl"
                 style={{
                     animation:
                         'slideUpPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both',
                 }}
             >
-                {/* Header line with Exercise name & dismiss X */}
-                <div className="mb-4 flex items-center justify-between border-b border-emerald-950/30 pb-2">
+                {/* Header: Exercise name & dismiss */}
+                <div className="mb-4 flex items-center justify-between border-b border-violet-900/30 pb-2">
                     <span className="max-w-[80%] truncate text-[10px] font-black tracking-[0.25em] text-neutral-400 uppercase">
                         {exerciseName}
                     </span>
                     <button
                         type="button"
                         onClick={onSkip}
-                        className="hover:text-neutral-350 cursor-pointer p-1 text-neutral-500 transition-colors"
+                        className="cursor-pointer p-1 text-neutral-500 transition-colors hover:text-neutral-300"
                         title="Close Rest Timer"
                     >
                         <X className="h-4 w-4" />
@@ -105,7 +113,7 @@ function RestTimerModal({
                 </div>
 
                 {/* Circular countdown */}
-                <div className="mb-6 flex justify-center">
+                <div className="mb-5 flex justify-center">
                     <div
                         className="relative"
                         style={{ width: SIZE, height: SIZE }}
@@ -113,7 +121,7 @@ function RestTimerModal({
                         {/* Glow */}
                         <div
                             className="absolute inset-0 rounded-full transition-all duration-1000"
-                            style={{ boxShadow: `0 0 35px 4px ${glowColor}` }}
+                            style={{ boxShadow: `0 0 40px 6px ${glowColor}` }}
                         />
 
                         <svg
@@ -121,16 +129,16 @@ function RestTimerModal({
                             height={SIZE}
                             style={{ transform: 'rotate(-90deg)' }}
                         >
-                            {/* Track (dark forest green) */}
+                            {/* Track */}
                             <circle
                                 cx={SIZE / 2}
                                 cy={SIZE / 2}
                                 r={RADIUS}
                                 fill="none"
-                                stroke="#1c2d27"
+                                stroke="#1e1a3a"
                                 strokeWidth={STROKE}
                             />
-                            {/* Progress arc (bright green) */}
+                            {/* Progress arc */}
                             <circle
                                 cx={SIZE / 2}
                                 cy={SIZE / 2}
@@ -155,25 +163,23 @@ function RestTimerModal({
                                 style={{
                                     fontSize: '3.25rem',
                                     color: ringColor,
-                                    textShadow: `0 0 15px ${glowColor}`,
+                                    textShadow: `0 0 20px ${glowColor}`,
                                 }}
                             >
                                 {formattedTimer}
+                            </span>
+                            <span className="mt-1 text-[10px] font-black tracking-[0.3em] text-violet-400/70 uppercase">
+                                Rest
                             </span>
                         </div>
                     </div>
                 </div>
 
-                {/* "Rest" label in green */}
-                <div className="mb-6 text-center text-xl font-extrabold tracking-wider text-[#84cc16] uppercase">
-                    Rest
-                </div>
-
                 {/* Info block: Sets / Total Time */}
-                <div className="mx-auto mb-8 w-full max-w-[240px] space-y-3 border-y border-emerald-950/20 py-4 text-xs">
+                <div className="mx-auto mb-6 w-full max-w-[240px] space-y-2.5 rounded-2xl border border-violet-900/20 bg-violet-950/20 px-4 py-3 text-xs">
                     <div className="flex items-center justify-between">
                         <span className="font-bold tracking-widest text-neutral-400">
-                            SETS
+                            SET
                         </span>
                         <span className="font-mono text-sm font-bold text-neutral-200">
                             {setNumber}
@@ -181,7 +187,7 @@ function RestTimerModal({
                     </div>
                     <div className="flex items-center justify-between">
                         <span className="font-bold tracking-widest text-neutral-400">
-                            TOTAL TIME
+                            WORKOUT TIME
                         </span>
                         <span className="font-mono text-sm font-bold text-neutral-200">
                             {formatTotalTime(totalTime)}
@@ -189,12 +195,12 @@ function RestTimerModal({
                     </div>
                 </div>
 
-                {/* Adjust buttons: -30 / +30 */}
-                <div className="mb-5 flex items-center justify-center gap-4">
+                {/* Adjust buttons */}
+                <div className="mb-4 flex items-center justify-center gap-3">
                     <button
                         type="button"
                         onClick={() => onAdjust(-30)}
-                        className="cursor-pointer rounded-xl border border-emerald-900/45 bg-neutral-900/60 px-4 py-2 text-xs font-black text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
+                        className="cursor-pointer rounded-xl border border-violet-900/40 bg-violet-950/30 px-5 py-2 text-xs font-black text-violet-300 transition-colors hover:bg-violet-900/40 hover:text-violet-100"
                         title="Subtract 30 seconds"
                     >
                         -30s
@@ -202,7 +208,7 @@ function RestTimerModal({
                     <button
                         type="button"
                         onClick={() => onAdjust(30)}
-                        className="cursor-pointer rounded-xl border border-emerald-900/45 bg-neutral-900/60 px-4 py-2 text-xs font-black text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
+                        className="cursor-pointer rounded-xl border border-violet-900/40 bg-violet-950/30 px-5 py-2 text-xs font-black text-violet-300 transition-colors hover:bg-violet-900/40 hover:text-violet-100"
                         title="Add 30 seconds"
                     >
                         +30s
@@ -210,18 +216,18 @@ function RestTimerModal({
                 </div>
 
                 {/* Control buttons: PAUSE / RESET */}
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                     <button
                         type="button"
                         onClick={isPaused ? onResume : onPause}
-                        className="hover:bg-yellow-350 flex-1 cursor-pointer rounded-xl bg-yellow-400 py-3 text-xs font-black tracking-wider text-neutral-950 uppercase shadow-md transition-all active:scale-[0.97]"
+                        className="flex-1 cursor-pointer rounded-xl bg-violet-600 py-3 text-xs font-black tracking-wider text-white uppercase shadow-lg shadow-violet-500/20 transition-all hover:bg-violet-500 active:scale-[0.97]"
                     >
                         {isPaused ? 'RESUME' : 'PAUSE'}
                     </button>
                     <button
                         type="button"
                         onClick={onReset}
-                        className="hover:bg-yellow-350 flex-1 cursor-pointer rounded-xl bg-yellow-400 py-3 text-xs font-black tracking-wider text-neutral-950 uppercase shadow-md transition-all active:scale-[0.97]"
+                        className="flex-1 cursor-pointer rounded-xl border border-violet-700/50 bg-violet-950/40 py-3 text-xs font-black tracking-wider text-violet-300 uppercase transition-all hover:bg-violet-900/50 hover:text-violet-100 active:scale-[0.97]"
                     >
                         RESET
                     </button>
@@ -234,7 +240,7 @@ function RestTimerModal({
                         onSkipTimer();
                         onSkip();
                     }}
-                    className="hover:text-neutral-350 mt-5 w-full cursor-pointer text-center text-xs font-bold tracking-widest text-neutral-500 uppercase transition-colors"
+                    className="mt-5 w-full cursor-pointer text-center text-xs font-bold tracking-widest text-neutral-600 uppercase transition-colors hover:text-neutral-400"
                 >
                     Skip Rest
                 </button>
@@ -251,12 +257,302 @@ function RestTimerModal({
     );
 }
 
+// ─── Create Custom Exercise Modal Component (Isolated to eliminate input lag) ─
+
+function CreateCustomExerciseModal({
+    isOpen,
+    onClose,
+    onCreated,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    onCreated: (newExerciseName: string) => void;
+}) {
+    const [processing, setProcessing] = useState(false);
+    const [data, setData] = useState({
+        name: '',
+        category: 'Strength',
+        muscleGroup: '',
+        equipment: 'None',
+        difficulty: 'Moderate',
+        instructions: '',
+        restSeconds: '2:00',
+    });
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    if (!isOpen) return null;
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setProcessing(true);
+        setErrors({});
+
+        // Use Inertia router.post for automatic CSRF handling
+        router.post('/Exercises/create', data, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                toast.success(`Created "${data.name}"!`);
+                const createdName = data.name;
+                setData({
+                    name: '',
+                    category: 'Strength',
+                    muscleGroup: '',
+                    equipment: 'None',
+                    difficulty: 'Moderate',
+                    instructions: '',
+                    restSeconds: '2:00',
+                });
+                setProcessing(false);
+                onCreated(createdName);
+                onClose();
+            },
+            onError: (errs) => {
+                setErrors(errs);
+                setProcessing(false);
+                toast.error('Failed to create custom exercise. Please check the inputs.');
+            },
+        });
+    };
+
+    return createPortal(
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-150">
+            <div
+                className="flex w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl animate-in zoom-in-95 duration-150"
+                style={{ maxHeight: '90dvh' }}
+            >
+                {/* Header */}
+                <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-slate-950/50 p-5">
+                    <div className="flex items-center gap-2">
+                        <Dumbbell className="h-5 w-5 text-indigo-400" />
+                        <h2 className="text-lg font-bold text-white">Create Custom Exercise</h2>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="cursor-pointer text-slate-400 transition-colors hover:text-white"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
+                </div>
+
+                {/* Form Body */}
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex flex-1 flex-col overflow-hidden"
+                >
+                    <div className="flex-1 space-y-4 overflow-y-auto p-6">
+                        <div>
+                            <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">
+                                Exercise Name
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                value={data.name}
+                                onChange={(e) =>
+                                    setData((prev) => ({
+                                        ...prev,
+                                        name: e.target.value,
+                                    }))
+                                }
+                                placeholder="e.g. Incline DB Bench Press"
+                                className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 py-2 text-sm text-white outline-none placeholder:text-slate-600 focus:border-indigo-500"
+                            />
+                            {errors.name && (
+                                <span className="mt-1 text-xs text-rose-400">
+                                    {errors.name}
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">
+                                    Category
+                                </label>
+                                <Select
+                                    value={data.category}
+                                    onValueChange={(val) =>
+                                        setData((prev) => ({
+                                            ...prev,
+                                            category: val,
+                                        }))
+                                    }
+                                >
+                                    <SelectTrigger className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 text-xs font-semibold text-white outline-none focus:border-indigo-500">
+                                        <SelectValue placeholder="Category" />
+                                    </SelectTrigger>
+                                    <SelectContent className="z-[130] border-white/10 bg-slate-900 shadow-2xl">
+                                        {['Strength', 'Cardio', 'Flexibility', 'Core'].map((v) => (
+                                            <SelectItem
+                                                key={v}
+                                                value={v}
+                                                className="cursor-pointer text-xs text-slate-200 focus:bg-indigo-500/20 focus:text-indigo-200"
+                                            >
+                                                {v}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">
+                                    Equipment
+                                </label>
+                                <Select
+                                    value={data.equipment}
+                                    onValueChange={(val) =>
+                                        setData((prev) => ({
+                                            ...prev,
+                                            equipment: val,
+                                        }))
+                                    }
+                                >
+                                    <SelectTrigger className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 text-xs font-semibold text-white outline-none focus:border-indigo-500">
+                                        <SelectValue placeholder="Equipment" />
+                                    </SelectTrigger>
+                                    <SelectContent className="z-[130] border-white/10 bg-slate-900 shadow-2xl">
+                                        {[
+                                            'Barbell',
+                                            'Dumbbell',
+                                            'Machine',
+                                            'Bodyweight',
+                                            'Cable',
+                                            'Kettlebell',
+                                            'None',
+                                        ].map((v) => (
+                                            <SelectItem
+                                                key={v}
+                                                value={v}
+                                                className="cursor-pointer text-xs text-slate-200 focus:bg-indigo-500/20 focus:text-indigo-200"
+                                            >
+                                                {v}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">
+                                    Muscle Group
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={data.muscleGroup}
+                                    onChange={(e) =>
+                                        setData((prev) => ({
+                                            ...prev,
+                                            muscleGroup: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="e.g. Chest, Triceps"
+                                    className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 py-2 text-sm text-white outline-none placeholder:text-slate-600 focus:border-indigo-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">
+                                    Difficulty
+                                </label>
+                                <Select
+                                    value={data.difficulty}
+                                    onValueChange={(val) =>
+                                        setData((prev) => ({
+                                            ...prev,
+                                            difficulty: val,
+                                        }))
+                                    }
+                                >
+                                    <SelectTrigger className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 text-xs font-semibold text-white outline-none focus:border-indigo-500">
+                                        <SelectValue placeholder="Difficulty" />
+                                    </SelectTrigger>
+                                    <SelectContent className="z-[130] border-white/10 bg-slate-900 shadow-2xl">
+                                        {['Easy', 'Moderate', 'Hard'].map((v) => (
+                                            <SelectItem
+                                                key={v}
+                                                value={v}
+                                                className="cursor-pointer text-xs text-slate-200 focus:bg-indigo-500/20 focus:text-indigo-200"
+                                            >
+                                                {v}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">
+                                Default Rest Timer
+                            </label>
+                            <input
+                                type="text"
+                                value={data.restSeconds}
+                                onChange={(e) =>
+                                    setData((prev) => ({
+                                        ...prev,
+                                        restSeconds: e.target.value,
+                                    }))
+                                }
+                                placeholder="2:00"
+                                className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3.5 py-2 text-sm text-white outline-none placeholder:text-slate-600 focus:border-indigo-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="mb-1 block text-xs font-bold tracking-wider text-slate-400 uppercase">
+                                Movement Instructions
+                            </label>
+                            <textarea
+                                value={data.instructions}
+                                onChange={(e) =>
+                                    setData((prev) => ({
+                                        ...prev,
+                                        instructions: e.target.value,
+                                    }))
+                                }
+                                placeholder="Describe execution cues..."
+                                className="h-20 w-full resize-none rounded-xl border border-white/10 bg-slate-950/60 p-3 text-xs text-white outline-none placeholder:text-slate-600 focus:border-indigo-500"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Sticky Modal Actions Footer */}
+                    <div className="sticky bottom-0 z-20 flex shrink-0 justify-end gap-3 border-t border-white/10 bg-slate-950 px-6 py-4 shadow-2xl">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="cursor-pointer rounded-xl border border-white/10 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="cursor-pointer rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2 text-xs font-black tracking-wider text-white shadow-lg shadow-indigo-500/25 transition-all hover:opacity-95 active:scale-[0.98] disabled:opacity-50"
+                        >
+                            {processing ? 'Saving...' : 'Save Exercise'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>,
+        document.body,
+    );
+}
+
 interface ExerciseLibraryItem {
     id: number;
     name: string;
     category: string;
     muscleGroup: string;
     restSeconds?: number;
+    lastPerformed?: { weight: number | string; reps: number | string }[];
+    previousSummary?: string | null;
 }
 
 export function ActiveWorkoutPanel() {
@@ -286,8 +582,10 @@ export function ActiveWorkoutPanel() {
     } = useWorkout();
 
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+    const [showFinishConfirm, setShowFinishConfirm] = useState(false);
     const [showRestPopup, setShowRestPopup] = useState(false);
     const [showAddExercise, setShowAddExercise] = useState(false);
+    const [isCreateExModalOpen, setIsCreateExModalOpen] = useState(false);
     const [exerciseLibrary, setExerciseLibrary] = useState<
         ExerciseLibraryItem[]
     >([]);
@@ -296,6 +594,19 @@ export function ActiveWorkoutPanel() {
     const [editingRestForExercise, setEditingRestForExercise] = useState<
         number | null
     >(null);
+
+    const handleExerciseCreated = (newExerciseName: string) => {
+        setLoadingLibrary(true);
+        fetch(`/api/exercises?t=${Date.now()}`, {
+            headers: { 'Cache-Control': 'no-cache' },
+        })
+            .then((res) => res.json())
+            .then((fresh) => {
+                setExerciseLibrary(fresh || []);
+                setLoadingLibrary(false);
+            })
+            .catch(() => setLoadingLibrary(false));
+    };
 
     // Format timer (e.g. 0:23, 14:05, 1:12:30)
     const formatTime = (totalSeconds: number) => {
@@ -312,39 +623,40 @@ export function ActiveWorkoutPanel() {
         return `${mins}:${pad(secs)}`;
     };
 
-    // Load exercises from API when opening exercise library
+    // Load exercises from API when opening exercise library (always fetch fresh data for instant set/rep sync)
     const handleOpenAddExercise = () => {
         setShowAddExercise(true);
-
-        if (exerciseLibrary.length === 0) {
-            setLoadingLibrary(true);
-            fetch('/api/exercises')
-                .then((res) => res.json())
-                .then((data) => {
-                    setExerciseLibrary(data || []);
-                    setLoadingLibrary(false);
-                })
-                .catch((err) => {
-                    console.error('Failed to load exercise library', err);
-                    toast.error('Failed to load exercises');
-                    setLoadingLibrary(false);
-                });
-        }
+        setLoadingLibrary(true);
+        fetch(`/api/exercises?t=${Date.now()}`, {
+            headers: { 'Cache-Control': 'no-cache' },
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                setExerciseLibrary(data || []);
+                setLoadingLibrary(false);
+            })
+            .catch((err) => {
+                console.error('Failed to load exercise library', err);
+                toast.error('Failed to load exercises');
+                setLoadingLibrary(false);
+            });
     };
 
     if (!isActive) {
         return null;
     }
 
-    // Filtered exercises for the library
-    const filteredLibrary = exerciseLibrary.filter(
-        (item) =>
-            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.muscleGroup
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase()) ||
-            item.category.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
+    // Filtered exercises for the library (memoized to prevent lag during timer ticks)
+    const filteredLibrary = useMemo(() => {
+        if (!searchQuery) return exerciseLibrary;
+        const q = searchQuery.toLowerCase();
+        return exerciseLibrary.filter(
+            (item) =>
+                item.name.toLowerCase().includes(q) ||
+                item.muscleGroup.toLowerCase().includes(q) ||
+                item.category.toLowerCase().includes(q),
+        );
+    }, [exerciseLibrary, searchQuery]);
 
     const formatRestTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -361,7 +673,7 @@ export function ActiveWorkoutPanel() {
                 className="border-neutral-850 hover:border-neutral-750 hover:bg-neutral-850/95 fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-4 z-40 flex cursor-pointer items-center justify-between rounded-2xl border bg-neutral-900/95 p-3.5 shadow-2xl backdrop-blur-md transition-all duration-300 active:scale-[0.99] md:right-4 md:bottom-4 md:left-auto md:w-96"
             >
                 <div className="flex items-center gap-3">
-                    <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400">
+                    <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-violet-500/10 text-violet-400">
                         <Clock className="h-4 w-4 animate-pulse" />
                     </div>
                     <div className="flex flex-col text-left">
@@ -389,7 +701,7 @@ export function ActiveWorkoutPanel() {
                             </span>
                         </div>
                     )}
-                    <span className="font-mono text-sm font-bold text-sky-400">
+                    <span className="font-mono text-sm font-bold text-violet-400">
                         {formatTime(elapsedSeconds)}
                     </span>
                     <button
@@ -416,7 +728,7 @@ export function ActiveWorkoutPanel() {
                 </button>
 
                 <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1.5 rounded-full bg-sky-950/40 px-3 py-1 text-sky-400">
+                    <div className="flex items-center gap-1.5 rounded-full bg-violet-950/40 px-3 py-1 text-violet-400">
                         <Clock className="h-3.5 w-3.5 animate-pulse" />
                         <span className="font-mono text-xs font-bold">
                             {formatTime(elapsedSeconds)}
@@ -426,7 +738,7 @@ export function ActiveWorkoutPanel() {
                         <button
                             type="button"
                             onClick={() => setShowRestPopup(true)}
-                            className="flex animate-pulse cursor-pointer items-center gap-1 rounded-full border border-amber-900/40 bg-amber-950/60 px-2.5 py-1 text-xs font-extrabold text-amber-400 shadow-md transition-all hover:bg-amber-900/80"
+                            className="flex animate-pulse cursor-pointer items-center gap-1 rounded-full border border-violet-700/40 bg-violet-950/60 px-2.5 py-1 text-xs font-extrabold text-violet-300 shadow-md transition-all hover:bg-violet-900/80"
                             title="Click to open Rest Timer"
                         >
                             <Timer className="h-3.5 w-3.5" />
@@ -436,8 +748,8 @@ export function ActiveWorkoutPanel() {
                 </div>
 
                 <button
-                    onClick={finishWorkout}
-                    className="rounded-xl bg-sky-500 px-4 py-1.5 text-xs font-bold tracking-wider text-white shadow-lg shadow-sky-500/20 transition-all hover:bg-sky-400 active:scale-[0.98]"
+                    onClick={() => setShowFinishConfirm(true)}
+                    className="rounded-xl bg-emerald-600 px-4 py-1.5 text-xs font-bold tracking-wider text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-500 active:scale-[0.98]"
                 >
                     FINISH
                 </button>
@@ -479,10 +791,21 @@ export function ActiveWorkoutPanel() {
                             >
                                 {/* Exercise Header */}
                                 <div className="flex items-center justify-between">
-                                    <div className="flex max-w-[80%] items-center gap-2">
-                                        <span className="truncate text-base font-extrabold text-sky-400">
+                                    <div className="flex max-w-[80%] items-center gap-2 flex-wrap">
+                                        <span className="truncate text-base font-extrabold text-violet-400">
                                             {ex.name}
                                         </span>
+                                        {/* Set count delta indicator */}
+                                        {ex.previousSets && ex.previousSets.length > 0 && ex.sets.length !== ex.previousSets.length && (
+                                            <span className={`rounded-full px-2 py-0.5 text-[9px] font-black tracking-widest uppercase ${
+                                                ex.sets.length > ex.previousSets.length
+                                                    ? 'bg-violet-500/15 text-violet-400'
+                                                    : 'bg-rose-500/15 text-rose-400'
+                                            }`}>
+                                                {ex.sets.length > ex.previousSets.length ? '▲' : '▼'}
+                                                {' '}{Math.abs(ex.sets.length - ex.previousSets.length)} set{Math.abs(ex.sets.length - ex.previousSets.length) > 1 ? 's' : ''} vs last
+                                            </span>
+                                        )}
                                         <button
                                             type="button"
                                             onClick={() =>
@@ -496,7 +819,7 @@ export function ActiveWorkoutPanel() {
                                             className={`flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-extrabold transition-all ${
                                                 editingRestForExercise ===
                                                 exIndex
-                                                    ? 'border-sky-500 bg-sky-500 text-white shadow-lg shadow-sky-500/20'
+                                                    ? 'border-violet-500 bg-violet-500 text-white shadow-lg shadow-violet-500/20'
                                                     : 'border-neutral-750 bg-neutral-800/60 text-neutral-400 hover:border-neutral-600 hover:text-neutral-300'
                                             }`}
                                             title="Adjust rest timer"
@@ -648,8 +971,28 @@ export function ActiveWorkoutPanel() {
                                                 </span>
 
                                                 {/* Previous Set Info */}
-                                                <span className="truncate text-xs text-neutral-500">
-                                                    —
+                                                <span className="truncate font-mono text-xs font-semibold text-neutral-400">
+                                                    {(() => {
+                                                        const prevSet =
+                                                            ex.previousSets && ex.previousSets[setIndex]
+                                                                ? ex.previousSets[setIndex]
+                                                                : ex.previousSets && ex.previousSets.length > 0
+                                                                  ? ex.previousSets[ex.previousSets.length - 1]
+                                                                  : null;
+
+                                                        if (prevSet) {
+                                                            const w = Number(prevSet.weight);
+                                                            const r = Number(prevSet.reps);
+
+                                                            return w > 0 ? `${w}kg × ${r}` : `${r} reps`;
+                                                        }
+
+                                                        if (ex.previousSummary) {
+                                                            return ex.previousSummary;
+                                                        }
+
+                                                        return '—';
+                                                    })()}
                                                 </span>
 
                                                 {/* Weight input */}
@@ -696,12 +1039,14 @@ export function ActiveWorkoutPanel() {
                                                 {/* Checkmark Completion Button */}
                                                 <button
                                                     type="button"
-                                                    onClick={() =>
-                                                        toggleSetCompleted(
-                                                            exIndex,
-                                                            setIndex,
-                                                        )
-                                                    }
+                                                    onClick={() => {
+                                                        const wasFinished = set.isFinished;
+                                                        toggleSetCompleted(exIndex, setIndex);
+                                                        // Auto-open the rest timer when marking done
+                                                        if (!wasFinished) {
+                                                            setTimeout(() => setShowRestPopup(true), 80);
+                                                        }
+                                                    }}
                                                     className={`flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg border transition-all ${
                                                         set.isFinished
                                                             ? 'border-emerald-500 bg-emerald-500 font-bold text-neutral-950'
@@ -914,6 +1259,49 @@ export function ActiveWorkoutPanel() {
                 </div>
             )}
 
+            {/* ── Finish Confirmation Dialog ── */}
+            {showFinishConfirm && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-neutral-950/80 p-5 backdrop-blur-md">
+                    <div className="w-full max-w-sm space-y-4 rounded-3xl border border-neutral-800 bg-neutral-900 p-6 text-center shadow-2xl">
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+                            <Check className="h-6 w-6 stroke-[3px]" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <h3 className="text-base font-extrabold text-neutral-100">
+                                Finish & Log Workout?
+                            </h3>
+                            <p className="text-xs leading-relaxed text-neutral-400">
+                                Great workout! Time elapsed:{' '}
+                                <span className="font-mono font-bold text-sky-400">
+                                    {formatTime(elapsedSeconds)}
+                                </span>
+                                . {exercises.length} exercise{exercises.length === 1 ? '' : 's'} recorded.
+                            </p>
+                            <p className="text-[11px] leading-relaxed text-neutral-500">
+                                All sets with recorded reps or weights will be automatically saved as completed.
+                            </p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowFinishConfirm(false)}
+                                className="flex-1 rounded-2xl border border-neutral-800 py-2.5 text-xs font-bold text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
+                            >
+                                Keep Editing
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowFinishConfirm(false);
+                                    finishWorkout();
+                                }}
+                                className="flex-1 rounded-2xl bg-emerald-500 py-2.5 text-xs font-bold text-neutral-950 shadow-lg shadow-emerald-500/20 transition-colors hover:bg-emerald-400"
+                            >
+                                Finish & Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ── Add Exercise Library Modal ── */}
             {showAddExercise && (
                 <div className="fixed inset-0 z-50 flex animate-in items-center justify-center p-4 pt-12 sm:p-6 duration-200 fade-in">
@@ -951,12 +1339,13 @@ export function ActiveWorkoutPanel() {
                                 />
                             </div>
                             <div className="flex justify-end">
-                                <a
-                                    href="/Exercises"
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCreateExModalOpen(true)}
                                     className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
                                 >
                                     + Create Custom Exercise
-                                </a>
+                                </button>
                             </div>
                         </div>
 
@@ -981,6 +1370,8 @@ export function ActiveWorkoutPanel() {
                                                 item.id,
                                                 item.name,
                                                 item.restSeconds,
+                                                item.lastPerformed,
+                                                item.previousSummary,
                                             );
                                             setShowAddExercise(false);
                                             setSearchQuery('');
@@ -995,9 +1386,16 @@ export function ActiveWorkoutPanel() {
                                                 {item.muscleGroup}
                                             </div>
                                         </div>
-                                        <span className="rounded bg-indigo-500/20 px-2 py-0.5 text-[9px] font-black tracking-widest text-indigo-300 uppercase">
-                                            {item.category}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            {item.previousSummary && (
+                                                <span className="rounded bg-slate-800 px-2 py-0.5 text-[9px] font-bold text-indigo-300">
+                                                    Prev: {item.previousSummary}
+                                                </span>
+                                            )}
+                                            <span className="rounded bg-indigo-500/20 px-2 py-0.5 text-[9px] font-black tracking-widest text-indigo-300 uppercase">
+                                                {item.category}
+                                            </span>
+                                        </div>
                                     </button>
                                 ))
                             )}
@@ -1005,6 +1403,15 @@ export function ActiveWorkoutPanel() {
                     </div>
                 </div>
             )}
+
+            {/* ── Create Custom Exercise Modal ── */}
+            <CreateCustomExerciseModal
+                isOpen={isCreateExModalOpen}
+                onClose={() => setIsCreateExModalOpen(false)}
+                onCreated={handleExerciseCreated}
+            />
+
+
 
             {/* ── Rest Timer Popup Modal ── */}
             {activeRest && showRestPopup && (

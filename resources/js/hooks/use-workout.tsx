@@ -15,6 +15,8 @@ export interface ActiveExercise {
     name: string;
     sets: ActiveSet[];
     restSeconds: number;
+    previousSets?: { weight: number | string; reps: number | string }[];
+    previousSummary?: string | null;
 }
 
 export interface WorkoutSession {
@@ -69,6 +71,8 @@ interface WorkoutContextType {
         exerciseId: number | null,
         name: string,
         restSeconds?: number,
+        previousSets?: { weight: number | string; reps: number | string }[],
+        previousSummary?: string | null,
     ) => void;
     removeActiveExercise: (exerciseIndex: number) => void;
     addActiveSet: (exerciseIndex: number) => void;
@@ -345,16 +349,18 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
 
         const activeExercises: ActiveExercise[] = (
             initialData?.exercises || []
-        ).map((ex) => ({
+        ).map((ex: any) => ({
             exercise_id: ex.exercise_id,
             name: ex.name,
             restSeconds: ex.restSeconds !== undefined ? ex.restSeconds : 120,
-            sets: ex.sets.map((s) => ({
+            sets: ex.sets.map((s: any) => ({
                 weight: s.weight,
                 reps: s.reps,
                 unit: s.unit || 'kg',
                 isFinished: false,
             })),
+            previousSets: ex.previousSets || ex.sets || [],
+            previousSummary: ex.previousSummary || null,
         }));
 
         setName(workoutName);
@@ -406,14 +412,28 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         exerciseId: number | null,
         exerciseName: string,
         restSeconds?: number,
+        previousSets?: { weight: number | string; reps: number | string }[],
+        previousSummary?: string | null,
     ) => {
+        const initialSets =
+            previousSets && previousSets.length > 0
+                ? previousSets.map((ps) => ({
+                      weight: ps.weight ?? 0,
+                      reps: ps.reps ?? 10,
+                      unit: 'kg',
+                      isFinished: false,
+                  }))
+                : [{ weight: 60, reps: 10, unit: 'kg', isFinished: false }];
+
         setExercises((prev) => [
             ...prev,
             {
                 exercise_id: exerciseId,
                 name: exerciseName,
                 restSeconds: restSeconds !== undefined ? restSeconds : 120,
-                sets: [{ weight: 60, reps: 10, unit: 'kg', isFinished: false }],
+                sets: initialSets,
+                previousSets: previousSets || [],
+                previousSummary: previousSummary || null,
             },
         ]);
         toast.message(`Added ${exerciseName} to workout`);
@@ -436,10 +456,13 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
                     return ex;
                 }
 
+                const nextSetIndex = ex.sets.length;
+                const prevSetMatch = ex.previousSets && ex.previousSets[nextSetIndex];
                 const lastSet = ex.sets[ex.sets.length - 1];
+
                 const newSet = {
-                    weight: lastSet ? lastSet.weight : 60,
-                    reps: lastSet ? lastSet.reps : 10,
+                    weight: prevSetMatch ? prevSetMatch.weight : lastSet ? lastSet.weight : 60,
+                    reps: prevSetMatch ? prevSetMatch.reps : lastSet ? lastSet.reps : 10,
                     unit: lastSet ? lastSet.unit : 'kg',
                     isFinished: false,
                 };
@@ -650,12 +673,21 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
             exercises: exercises.map((ex) => ({
                 exercise_id: ex.exercise_id,
                 name: ex.name,
-                sets: ex.sets.map((s) => ({
-                    weight: s.weight === '' ? null : s.weight,
-                    reps: s.reps === '' ? null : s.reps,
-                    isFinished: s.isFinished,
-                    is_completed: s.isFinished,
-                })),
+                sets: ex.sets.map((s) => {
+                    const weightVal = s.weight === '' ? null : s.weight;
+                    const repsVal = s.reps === '' ? null : s.reps;
+                    const hasValues =
+                        (weightVal !== null && Number(weightVal) > 0) ||
+                        (repsVal !== null && Number(repsVal) > 0);
+                    const isDone = s.isFinished || hasValues;
+
+                    return {
+                        weight: weightVal,
+                        reps: repsVal,
+                        isFinished: isDone,
+                        is_completed: isDone,
+                    };
+                }),
             })),
         };
 

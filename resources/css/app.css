@@ -135,13 +135,18 @@
 @layer base {
     * {
         @apply border-border;
-        touch-action: manipulation;
     }
 
     html, body {
         overflow-x: hidden;
-        scroll-behavior: smooth;
         -webkit-overflow-scrolling: touch;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+        /* Prevents layout shift when Radix UI locks body scroll on dropdown/modal open.
+           Reserves space for the scrollbar even when it's not visible. */
+        scrollbar-gutter: stable;
     }
 
     body {

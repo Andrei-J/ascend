@@ -1,7 +1,8 @@
-import { Head } from '@inertiajs/react';
-import { Clock, Trophy, Weight, Dumbbell, History } from 'lucide-react';
-import { useMemo } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { Clock, Trophy, Weight, Dumbbell, History, ChevronDown, Filter, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { EdgeHeader, EdgeCard, EdgeBadge } from '@/lib/edge/engine';
+
 
 interface LoggedSet {
     id: number;
@@ -29,9 +30,31 @@ interface LoggedWorkout {
 
 export default function HistoryPage({
     history = [],
+    historyTotal = 0,
+    historyHasMore = false,
+    historyPage = 1,
+    filterMonth = null,
+    filterYear = null,
 }: {
     history?: LoggedWorkout[];
+    historyTotal?: number;
+    historyHasMore?: boolean;
+    historyPage?: number;
+    filterMonth?: number | null;
+    filterYear?: number | null;
 }) {
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
+
+    const currentYear = new Date().getFullYear();
+    const yearOptions = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3];
+
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+
+
     const processedHistory = useMemo(() => {
         const chronological = [...history].sort(
             (a, b) =>
@@ -217,6 +240,43 @@ export default function HistoryPage({
         return total;
     };
 
+    const handleLoadMore = () => {
+        setIsLoadingMore(true);
+        const nextPage = historyPage + 1;
+        const params: Record<string, string | number> = { page: nextPage };
+        if (filterMonth) params.month = filterMonth;
+        if (filterYear) params.year = filterYear;
+
+        router.visit('/History', {
+            data: params,
+            preserveScroll: true,
+            preserveState: true,
+            only: ['history', 'historyHasMore', 'historyPage', 'historyTotal'],
+            onFinish: () => setIsLoadingMore(false),
+        });
+    };
+
+    const applyFilter = (month: number | null, year: number | null) => {
+        const params: Record<string, string | number> = { page: 1 };
+        if (month) params.month = month;
+        if (year) params.year = year;
+
+        router.visit('/History', {
+            data: params,
+            preserveScroll: false,
+            preserveState: false,
+            only: ['history', 'historyHasMore', 'historyPage', 'historyTotal', 'filterMonth', 'filterYear'],
+        });
+        setShowFilters(false);
+    };
+
+    const clearFilter = () => {
+        router.visit('/History', { data: {}, preserveScroll: false, preserveState: false });
+        setShowFilters(false);
+    };
+
+    const hasActiveFilter = filterMonth || filterYear;
+
     return (
         <>
             <Head title="History - Ascend EDGE" />
@@ -228,6 +288,89 @@ export default function HistoryPage({
                     icon={<History className="h-7 w-7 text-indigo-400" />}
                 />
 
+                {/* Filter Bar */}
+                <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-400">
+                            {historyTotal} workout{historyTotal !== 1 ? 's' : ''} total
+                        </span>
+                        {hasActiveFilter && (
+                            <span className="flex items-center gap-1 rounded-full bg-indigo-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-300">
+                                <Filter className="h-3 w-3" />
+                                {filterMonth ? monthNames[filterMonth - 1] : ''}{filterMonth && filterYear ? ' ' : ''}{filterYear || ''}
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {hasActiveFilter && (
+                            <button
+                                onClick={clearFilter}
+                                className="flex cursor-pointer items-center gap-1 rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[11px] font-bold text-rose-400 transition-colors hover:bg-rose-500/20"
+                            >
+                                <X className="h-3 w-3" />
+                                Clear
+                            </button>
+                        )}
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all ${
+                                showFilters
+                                    ? 'border-indigo-500/50 bg-indigo-500/15 text-indigo-300'
+                                    : 'border-white/10 bg-slate-900/60 text-slate-400 hover:border-white/20 hover:text-white'
+                            }`}
+                        >
+                            <Filter className="h-3.5 w-3.5" />
+                            Filter
+                            <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Filter Panel */}
+                {showFilters && (
+                    <div className="animate-in slide-in-from-top-2 rounded-2xl border border-white/10 bg-slate-900/80 p-4 duration-200">
+                        <p className="mb-3 text-[11px] font-black tracking-widest text-slate-400 uppercase">Filter by Date</p>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="mb-2 text-[10px] font-bold text-slate-500 uppercase">Month</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {monthNames.map((m, i) => (
+                                        <button
+                                            key={m}
+                                            onClick={() => applyFilter(i + 1, filterYear || currentYear)}
+                                            className={`cursor-pointer rounded-lg px-2 py-1 text-[10px] font-bold transition-colors ${
+                                                filterMonth === i + 1
+                                                    ? 'bg-indigo-500 text-white'
+                                                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                                            }`}
+                                        >
+                                            {m.slice(0, 3)}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <p className="mb-2 text-[10px] font-bold text-slate-500 uppercase">Year</p>
+                                <div className="flex flex-col gap-1.5">
+                                    {yearOptions.map((y) => (
+                                        <button
+                                            key={y}
+                                            onClick={() => applyFilter(filterMonth || null, y)}
+                                            className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+                                                filterYear === y
+                                                    ? 'bg-indigo-500 text-white'
+                                                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                                            }`}
+                                        >
+                                            {y}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex flex-col gap-8">
                     {groupedWorkouts.length === 0 ? (
                         <EdgeCard
@@ -238,13 +381,21 @@ export default function HistoryPage({
                                 <Dumbbell className="h-10 w-10 text-indigo-400" />
                             </div>
                             <h3 className="text-xl font-black text-white">
-                                No workouts completed yet
+                                {hasActiveFilter ? 'No workouts for this period' : 'No workouts completed yet'}
                             </h3>
                             <p className="mt-2 max-w-xs text-xs leading-relaxed text-slate-400">
-                                Complete your first workout session to record
-                                set logs, total volume, and personal records in
-                                your history timeline.
+                                {hasActiveFilter
+                                    ? 'Try adjusting the date filter to see workouts from a different period.'
+                                    : 'Complete your first workout session to record set logs, total volume, and personal records in your history timeline.'}
                             </p>
+                            {hasActiveFilter && (
+                                <button
+                                    onClick={clearFilter}
+                                    className="mt-4 cursor-pointer rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-xs font-bold text-indigo-300 transition-colors hover:bg-indigo-500/20"
+                                >
+                                    Clear Filter
+                                </button>
+                            )}
                         </EdgeCard>
                     ) : (
                         groupedWorkouts.map((group) => (
@@ -374,6 +525,36 @@ export default function HistoryPage({
                                 </div>
                             </div>
                         ))
+                    )}
+
+                    {/* Load More Button */}
+                    {historyHasMore && (
+                        <div className="flex justify-center pt-2">
+                            <button
+                                onClick={handleLoadMore}
+                                disabled={isLoadingMore}
+                                className="flex cursor-pointer items-center gap-2 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 px-6 py-3 text-sm font-bold text-indigo-300 shadow-lg transition-all hover:bg-indigo-500/20 hover:text-indigo-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {isLoadingMore ? (
+                                    <>
+                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-400/30 border-t-indigo-400" />
+                                        Loading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <ChevronDown className="h-4 w-4" />
+                                        Load More
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Footer count */}
+                    {history.length > 0 && (
+                        <p className="text-center text-xs text-slate-600">
+                            Showing {history.length} of {historyTotal} workout{historyTotal !== 1 ? 's' : ''}
+                        </p>
                     )}
                 </div>
             </div>

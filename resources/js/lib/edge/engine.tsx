@@ -139,7 +139,7 @@ export const EdgeStat = memo(function EdgeStat({
         <div
             onClick={onClick}
             className={cn(
-                'group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 sm:p-5',
+                'group relative overflow-hidden rounded-2xl p-4 transition-transform duration-200 [transform:translateZ(0)] sm:p-5',
                 onClick && 'cursor-pointer hover:-translate-y-1',
                 getVariantClasses(variant),
                 getElevationClasses(elevation),
@@ -147,12 +147,12 @@ export const EdgeStat = memo(function EdgeStat({
                 className,
             )}
         >
-            <div className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-indigo-500/10 blur-2xl transition-all duration-500 group-hover:bg-indigo-500/20" />
+            <div className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-indigo-500/10 blur-xl transform-gpu transition-colors duration-300 group-hover:bg-indigo-500/20" />
 
             <div className="mb-2 flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                     {icon && (
-                        <div className="rounded-xl border border-slate-700/60 bg-slate-800/80 p-2 text-indigo-400 transition-all duration-300 group-hover:scale-110 group-hover:text-indigo-300">
+                        <div className="rounded-xl border border-slate-700/60 bg-slate-800/80 p-2 text-indigo-400 transition-transform duration-200 group-hover:scale-110 group-hover:text-indigo-300">
                             {icon}
                         </div>
                     )}
@@ -246,7 +246,7 @@ export const EdgeCard = memo(function EdgeCard({
     return (
         <div
             className={cn(
-                'relative overflow-hidden rounded-2xl p-5 transition-all duration-300',
+                'relative overflow-hidden rounded-2xl p-5 [transform:translateZ(0)] transition-[border-color,box-shadow] duration-200',
                 getVariantClasses(variant),
                 getElevationClasses(elevation),
                 getAnimationClasses(animation),
